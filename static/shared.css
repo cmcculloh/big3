@@ -1,0 +1,25 @@
+/* https://coolors.co/0a2463-fb3640-605f5e-247ba0-e2e2e2 */
+:root{
+    /* CSS HEX */
+    --royal-blue-traditional: #0a2463;
+    --imperial-red: #fb3640;
+    --davys-gray: #605f5e;
+    --cerulean: #247ba0;
+    --platinum: #e2e2e2;
+
+    --primary: var(--royal-blue-traditional);
+    --secondary: var(--imperial-red);
+    --tertiary: var(--davys-gray);
+    --accent: var(--cerulean);
+    --subtle: var(--platinum);
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    padding: 0;
+    margin: 0;
+}
+
+a {color: var(--primary); text-decoration: none}
+a:hover {color: var(--secondary); text-decoration: underline}
+a:active{color: var(--secondary)}

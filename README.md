@@ -28,6 +28,19 @@ npm run dev -- --open
 ### Drizzle (Supabase DB connector)
 https://orm.drizzle.team/docs/get-started/supabase-new
 
+./src/lib/server/db/schema.js
+
+```
+npx drizzle-kit push
+```
+
+To push up changes
+
+### Lucia
+authentication
+
+https://lucia-auth.com/
+
 ## Building
 
 To create a production version of your app:
