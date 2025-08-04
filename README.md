@@ -25,6 +25,9 @@ npm run dev
 npm run dev -- --open
 ```
 
+### Drizzle (Supabase DB connector)
+https://orm.drizzle.team/docs/get-started/supabase-new
+
 ## Building
 
 To create a production version of your app:
