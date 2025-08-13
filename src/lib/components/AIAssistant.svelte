@@ -15,6 +15,29 @@
     let quickWorkoutTime = 30;
     let quickWorkoutFocus = 'full body';
 
+    // Auto-complete state
+    let autoCompleteSuggestions = [];
+    let showAutoComplete = false;
+    let currentSuggestionType = '';
+    let promptBuilder = {
+        overallTask: '',
+        duration: '',
+        targetAreas: [],
+        workoutType: '',
+        equipmentType: '',
+        include: []
+    };
+
+    // Suggestion categories
+    const suggestionTypes = [
+        { key: 'overallTask', label: 'What do you want to do?', icon: '🎯' },
+        { key: 'duration', label: 'How much time?', icon: '⏱️' },
+        { key: 'targetAreas', label: 'Target areas?', icon: '💪' },
+        { key: 'workoutType', label: 'Workout type?', icon: '🏋️' },
+        { key: 'equipmentType', label: 'Equipment?', icon: '🏋️‍♂️' },
+        { key: 'include', label: 'Include?', icon: '➕' }
+    ];
+
     const focusOptions = [
         'full body', 'upper body', 'lower body', 'core', 'cardio',
         'strength', 'flexibility', 'arms', 'legs', 'back', 'chest'
@@ -32,9 +55,217 @@
 💡 Suggest exercise replacements
 📊 Analyze your performance
 
-What would you like to do today?`,
+Start typing what you want, and I'll help you build the perfect prompt!`,
             timestamp: new Date()
         }];
+    }
+
+    // Watch for changes in currentMessage to trigger auto-complete
+    $: if (currentMessage.trim()) {
+        handleAutoComplete(currentMessage);
+    } else {
+        showAutoComplete = false;
+        autoCompleteSuggestions = [];
+    }
+
+    async function handleAutoComplete(input) {
+        if (!input.trim()) {
+            showAutoComplete = false;
+            return;
+        }
+
+        // Determine what type of suggestion to show based on current input
+        const suggestionType = determineSuggestionType(input);
+
+        if (suggestionType !== currentSuggestionType) {
+            currentSuggestionType = suggestionType;
+            await fetchAutoCompleteSuggestions(input, suggestionType);
+        }
+    }
+
+    function determineSuggestionType(input) {
+        const lowerInput = input.toLowerCase();
+
+        // Check if we're still building the initial request
+        if (!promptBuilder.overallTask) {
+            return 'overallTask';
+        }
+
+        // Check if we need duration
+        if (!promptBuilder.duration && !lowerInput.includes('minute') && !lowerInput.includes('hour')) {
+            return 'duration';
+        }
+
+        // Check if we need target areas
+        if (promptBuilder.targetAreas.length === 0 && !lowerInput.includes('body') && !lowerInput.includes('arm') && !lowerInput.includes('leg')) {
+            return 'targetAreas';
+        }
+
+        // Check if we need workout type
+        if (!promptBuilder.workoutType && !lowerInput.includes('strength') && !lowerInput.includes('cardio') && !lowerInput.includes('yoga')) {
+            return 'workoutType';
+        }
+
+        // Check if we need equipment
+        if (!promptBuilder.equipmentType && !lowerInput.includes('dumbbell') && !lowerInput.includes('barbell') && !lowerInput.includes('bodyweight')) {
+            return 'equipmentType';
+        }
+
+        // Check if we need include elements
+        if (promptBuilder.include.length === 0) {
+            return 'include';
+        }
+
+        return 'complete';
+    }
+
+    async function fetchAutoCompleteSuggestions(input, type) {
+        try {
+            const response = await fetch('/api/ai/auto-complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    input,
+                    type,
+                    currentPrompt: buildCurrentPrompt(),
+                    userHistory
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                autoCompleteSuggestions = data.suggestions || [];
+                showAutoComplete = autoCompleteSuggestions.length > 0;
+            } else {
+                // Fallback to static suggestions if API fails
+                autoCompleteSuggestions = getStaticSuggestions(type);
+                showAutoComplete = autoCompleteSuggestions.length > 0;
+            }
+        } catch (error) {
+            console.warn('Auto-complete API failed, using static suggestions:', error);
+            autoCompleteSuggestions = getStaticSuggestions(type);
+            showAutoComplete = autoCompleteSuggestions.length > 0;
+        }
+    }
+
+    function getStaticSuggestions(type) {
+        switch (type) {
+            case 'overallTask':
+                return [
+                    { text: 'Create a new workout routine', action: 'replace' },
+                    { text: 'Optimize my existing routine', action: 'replace' },
+                    { text: 'Generate a quick workout', action: 'replace' },
+                    { text: 'Suggest exercise substitutions', action: 'replace' }
+                ];
+            case 'duration':
+                return [
+                    { text: '30 minutes', action: 'append' },
+                    { text: '45 minutes', action: 'append' },
+                    { text: '1 hour', action: 'append' },
+                    { text: '20 minutes', action: 'append' }
+                ];
+            case 'targetAreas':
+                return [
+                    { text: 'upper body', action: 'append' },
+                    { text: 'lower body', action: 'append' },
+                    { text: 'full body', action: 'append' },
+                    { text: 'core', action: 'append' }
+                ];
+            case 'workoutType':
+                return [
+                    { text: 'strength training', action: 'append' },
+                    { text: 'cardio', action: 'append' },
+                    { text: 'yoga', action: 'append' },
+                    { text: 'HIIT', action: 'append' }
+                ];
+            case 'equipmentType':
+                return [
+                    { text: 'dumbbells', action: 'append' },
+                    { text: 'bodyweight only', action: 'append' },
+                    { text: 'resistance bands', action: 'append' },
+                    { text: 'full gym equipment', action: 'append' }
+                ];
+            case 'include':
+                return [
+                    { text: 'warmup exercises', action: 'append' },
+                    { text: 'cool-down stretches', action: 'append' },
+                    { text: 'cardio elements', action: 'append' },
+                    { text: 'strength training', action: 'append' }
+                ];
+            default:
+                return [];
+        }
+    }
+
+    function buildCurrentPrompt() {
+        let prompt = '';
+
+        if (promptBuilder.overallTask) {
+            prompt += promptBuilder.overallTask;
+        }
+
+        if (promptBuilder.duration) {
+            prompt += ` for ${promptBuilder.duration}`;
+        }
+
+        if (promptBuilder.targetAreas.length > 0) {
+            prompt += ` focusing on ${promptBuilder.targetAreas.join(', ')}`;
+        }
+
+        if (promptBuilder.workoutType) {
+            prompt += ` using ${promptBuilder.workoutType}`;
+        }
+
+        if (promptBuilder.equipmentType) {
+            prompt += ` with ${promptBuilder.equipmentType}`;
+        }
+
+        if (promptBuilder.include.length > 0) {
+            prompt += `. Include: ${promptBuilder.include.join(', ')}`;
+        }
+
+        return prompt.trim();
+    }
+
+    function selectSuggestion(suggestion) {
+        if (suggestion.action === 'replace') {
+            currentMessage = suggestion.text;
+            updatePromptBuilder(currentSuggestionType, suggestion.text);
+        } else if (suggestion.action === 'append') {
+            currentMessage += ` ${suggestion.text}`;
+            updatePromptBuilder(currentSuggestionType, suggestion.text);
+        }
+
+        showAutoComplete = false;
+        autoCompleteSuggestions = [];
+    }
+
+    function updatePromptBuilder(type, value) {
+        switch (type) {
+            case 'overallTask':
+                promptBuilder.overallTask = value;
+                break;
+            case 'duration':
+                promptBuilder.duration = value;
+                break;
+            case 'targetAreas':
+                if (!promptBuilder.targetAreas.includes(value)) {
+                    promptBuilder.targetAreas = [...promptBuilder.targetAreas, value];
+                }
+                break;
+            case 'workoutType':
+                promptBuilder.workoutType = value;
+                break;
+            case 'equipmentType':
+                promptBuilder.equipmentType = value;
+                break;
+            case 'include':
+                if (!promptBuilder.include.includes(value)) {
+                    promptBuilder.include = [...promptBuilder.include, value];
+                }
+                break;
+        }
+        promptBuilder = { ...promptBuilder }; // Trigger reactivity
     }
 
     async function sendMessage() {
@@ -50,6 +281,7 @@ What would you like to do today?`,
         const messageToSend = currentMessage;
         currentMessage = '';
         isLoading = true;
+        showAutoComplete = false;
 
         try {
             // Determine the type of request and call appropriate API
@@ -231,12 +463,29 @@ Would you like me to save this as a new routine?`, workout);
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();
             sendMessage();
+        } else if (event.key === 'Escape') {
+            showAutoComplete = false;
+            autoCompleteSuggestions = [];
         }
     }
 
     function showQuickWorkoutForm() {
         showQuickWorkout = true;
         addAIMessage('I can create a quick workout for you! How much time do you have and what would you like to focus on?');
+    }
+
+    function clearPromptBuilder() {
+        promptBuilder = {
+            overallTask: '',
+            duration: '',
+            targetAreas: [],
+            workoutType: '',
+            equipmentType: '',
+            include: []
+        };
+        currentMessage = '';
+        showAutoComplete = false;
+        autoCompleteSuggestions = [];
     }
 </script>
 
@@ -246,6 +495,9 @@ Would you like me to save this as a new routine?`, workout);
         <div class="ai-actions">
             <Button variant="secondary" size="small" on:click={showQuickWorkoutForm}>
                 ⚡ Quick Workout
+            </Button>
+            <Button variant="secondary" size="small" on:click={clearPromptBuilder}>
+                🗑️ Clear
             </Button>
         </div>
     </div>
@@ -300,11 +552,45 @@ Would you like me to save this as a new routine?`, workout);
             {/if}
         </div>
 
+        <!-- Auto-complete Suggestions -->
+        {#if showAutoComplete && autoCompleteSuggestions.length > 0}
+            <div class="auto-complete-container">
+                <div class="auto-complete-header">
+                    <span class="suggestion-type">
+                        {suggestionTypes.find(s => s.key === currentSuggestionType)?.icon}
+                        {suggestionTypes.find(s => s.key === currentSuggestionType)?.label}
+                    </span>
+                </div>
+                <div class="auto-complete-suggestions">
+                    {#each autoCompleteSuggestions as suggestion}
+                        <button
+                            class="auto-complete-suggestion"
+                            on:click={() => selectSuggestion(suggestion)}
+                        >
+                            {suggestion.text}
+                        </button>
+                    {/each}
+                </div>
+            </div>
+        {/if}
+
+        <!-- Prompt Builder Progress -->
+        {#if Object.values(promptBuilder).some(v => v && (Array.isArray(v) ? v.length > 0 : true))}
+            <div class="prompt-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {Math.min(100, (Object.values(promptBuilder).filter(v => v && (Array.isArray(v) ? v.length > 0 : true)).length / 6) * 100)}%"></div>
+                </div>
+                <span class="progress-text">
+                    Building your prompt... {Object.values(promptBuilder).filter(v => v && (Array.isArray(v) ? v.length > 0 : true)).length} of 6 sections
+                </span>
+            </div>
+        {/if}
+
         <div class="input-container">
             <textarea
                 bind:value={currentMessage}
                 on:keydown={handleKeydown}
-                placeholder="Ask me to create a workout, optimize your routine, or suggest exercises..."
+                placeholder="Start typing what you want... I'll help you build the perfect prompt!"
                 class="message-input"
                 rows="2"
                 disabled={isLoading}
@@ -325,8 +611,9 @@ Would you like me to save this as a new routine?`, workout);
             <h4>⚡ Quick Workout Generator</h4>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Time Available (minutes)</label>
+                    <label for="quick-time">Time Available (minutes)</label>
                     <input
+                        id="quick-time"
                         type="number"
                         bind:value={quickWorkoutTime}
                         min="10"
@@ -335,8 +622,8 @@ Would you like me to save this as a new routine?`, workout);
                     />
                 </div>
                 <div class="form-group">
-                    <label>Focus Area</label>
-                    <select bind:value={quickWorkoutFocus} class="form-select">
+                    <label for="quick-focus">Focus Area</label>
+                    <select id="quick-focus" bind:value={quickWorkoutFocus} class="form-select">
                         {#each focusOptions as option}
                             <option value={option}>{option}</option>
                         {/each}
@@ -371,7 +658,7 @@ Would you like me to save this as a new routine?`, workout);
         justify-content: space-between;
         align-items: center;
         padding-bottom: 1rem;
-        border-bottom: 1px solid var(--subtle);
+        border-bottom: 2px solid var(--subtle);
         margin-bottom: 1rem;
     }
 
@@ -379,6 +666,11 @@ Would you like me to save this as a new routine?`, workout);
         margin: 0;
         color: var(--primary);
         font-size: 1.25rem;
+    }
+
+    .ai-actions {
+        display: flex;
+        gap: 0.5rem;
     }
 
     .chat-container {
@@ -472,10 +764,91 @@ Would you like me to save this as a new routine?`, workout);
         text-align: right;
     }
 
+    /* Auto-complete Styles */
+    .auto-complete-container {
+        background: white;
+        border: 1px solid var(--subtle);
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin: 0 1rem;
+    }
+
+    .auto-complete-header {
+        background-color: var(--subtle);
+        padding: 0.5rem 1rem;
+        border-bottom: 1px solid var(--subtle);
+    }
+
+    .suggestion-type {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--primary);
+    }
+
+    .auto-complete-suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 1rem;
+    }
+
+    .auto-complete-suggestion {
+        padding: 0.5rem 1rem;
+        background: white;
+        border: 1px solid var(--subtle);
+        border-radius: 1.5rem;
+        color: var(--primary);
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+
+    .auto-complete-suggestion:hover {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
+        transform: translateY(-1px);
+    }
+
+    /* Prompt Progress Styles */
+    .prompt-progress {
+        margin: 0 1rem;
+        padding: 1rem;
+        background-color: #f8fafc;
+        border-radius: 0.5rem;
+        border: 1px solid var(--subtle);
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 8px;
+        background-color: var(--subtle);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 0.5rem;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background-color: var(--primary);
+        border-radius: 4px;
+        transition: width 0.3s ease-in-out;
+    }
+
+    .progress-text {
+        font-size: 0.875rem;
+        color: var(--tertiary);
+        text-align: center;
+        display: block;
+    }
+
     .input-container {
         display: flex;
         gap: 0.5rem;
         align-items: flex-end;
+        padding: 0 1rem;
     }
 
     .message-input {
@@ -608,6 +981,14 @@ Would you like me to save this as a new routine?`, workout);
         .input-container {
             flex-direction: column;
             align-items: stretch;
+        }
+
+        .auto-complete-suggestions {
+            flex-direction: column;
+        }
+
+        .auto-complete-suggestion {
+            text-align: center;
         }
     }
 </style>

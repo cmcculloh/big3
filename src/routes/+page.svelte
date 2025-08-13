@@ -2,6 +2,10 @@
     import Nav from '$lib/components/nav.svelte';
     import Button from '$lib/components/Button.svelte';
     import Card from '$lib/components/Card.svelte';
+
+    // Get user data from page data
+    export let data;
+    $: ({ user } = data);
 </script>
 
 <Nav />
@@ -15,15 +19,46 @@
                 Build custom routines, track your progress, and achieve your fitness goals with our intuitive workout app.
             </p>
             <div class="hero-actions">
-                <Button variant="primary" size="large" href="/routines">
-                    Start Workout
-                </Button>
-                <Button variant="ghost" size="large" href="/routines/create">
-                    Create Routine
-                </Button>
+                {#if user}
+                    <Button variant="primary" size="large" href="/routines">
+                        Start Workout
+                    </Button>
+                    <Button variant="ghost" size="large" href="/routines/create">
+                        Create Routine
+                    </Button>
+                    <Button variant="secondary" size="large" href="/history">
+                        View Progress
+                    </Button>
+                {:else}
+                    <Button variant="primary" size="large" href="/login">
+                        Get Started
+                    </Button>
+                    <Button variant="ghost" size="large" href="/login">
+                        Sign In
+                    </Button>
+                    <Button variant="secondary" size="large" href="/demo-setup">
+                        Try Demo
+                    </Button>
+                {/if}
             </div>
         </div>
     </section>
+
+    {#if user}
+        <section class="welcome-back">
+            <Card>
+                <div class="welcome-content">
+                    <h2>Welcome back, {user.username}! 👋</h2>
+                    <p>Ready to crush your next workout? Here are some quick actions:</p>
+                    <div class="welcome-actions">
+                        <Button variant="primary" href="/routines">View Routines</Button>
+                        <Button variant="secondary" href="/history">Check Progress</Button>
+                        <Button variant="ghost" href="/ai">Get AI Workout</Button>
+                    </div>
+                </div>
+            </Card>
+        </section>
+    {/if}
 
     <section class="features">
         <h2>Features</h2>
@@ -135,6 +170,36 @@
     }
 
     .hero-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .welcome-back {
+        margin: 3rem 0;
+    }
+
+    .welcome-content {
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .welcome-content h2 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin: 0 0 1rem 0;
+        color: var(--primary);
+    }
+
+    .welcome-content p {
+        color: var(--tertiary);
+        margin: 0 0 1.5rem 0;
+        font-size: 1.125rem;
+    }
+
+    .welcome-actions {
         display: flex;
         gap: 1rem;
         justify-content: center;

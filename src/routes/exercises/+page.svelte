@@ -2,6 +2,8 @@
     import Nav from '$lib/components/nav.svelte';
     import Button from '$lib/components/Button.svelte';
     import Card from '$lib/components/Card.svelte';
+    import AlertModal from '$lib/components/AlertModal.svelte';
+    import AddExerciseModal from '$lib/components/AddExerciseModal.svelte';
     import { onMount } from 'svelte';
 
     let exercises = [];
@@ -11,115 +13,97 @@
     let selectedCategory = 'all';
     let selectedEquipment = 'all';
 
+    // Modal state
+    let showAddExerciseModal = false;
+    let showAlertModal = false;
+    let alertTitle = '';
+    let alertMessage = '';
+    let alertVariant = 'info';
+
     const categories = [
         { value: 'all', label: 'All Categories' },
         { value: 'strength', label: 'Strength' },
         { value: 'cardio', label: 'Cardio' },
         { value: 'flexibility', label: 'Flexibility' },
-        { value: 'yoga', label: 'Yoga' },
+        { value: 'balance', label: 'Balance' },
         { value: 'sports', label: 'Sports' }
     ];
 
     const equipmentTypes = [
         { value: 'all', label: 'All Equipment' },
         { value: 'bodyweight', label: 'Bodyweight' },
-        { value: 'weights', label: 'Weights' },
-        { value: 'bands', label: 'Resistance Bands' },
-        { value: 'cardio', label: 'Cardio Equipment' }
+        { value: 'dumbbells', label: 'Dumbbells' },
+        { value: 'resistance_bands', label: 'Resistance Bands' },
+        { value: 'barbell', label: 'Barbell' },
+        { value: 'kettlebell', label: 'Kettlebell' },
+        { value: 'cardio_machine', label: 'Cardio Machine' }
     ];
 
-    // Mock exercise data - will be replaced with actual API calls
-    const mockExercises = [
-        {
-            id: 1,
-            name: 'Push-ups',
-            description: 'Classic bodyweight exercise for chest, shoulders, and triceps',
-            category: 'strength',
-            equipment: { name: 'Bodyweight', type: 'bodyweight' },
-            instructions: 'Start in plank position, lower body until chest nearly touches ground, then push back up',
-            videoUrl: null
-        },
-        {
-            id: 2,
-            name: 'Dumbbell Rows',
-            description: 'Single-arm rowing motion targeting back muscles',
-            category: 'strength',
-            equipment: { name: 'Dumbbells', type: 'weights' },
-            instructions: 'Bend at waist, pull dumbbell up to hip level, keeping elbow close to body',
-            videoUrl: null
-        },
-        {
-            id: 3,
-            name: 'Squats',
-            description: 'Lower body exercise targeting quads, hamstrings, and glutes',
-            category: 'strength',
-            equipment: { name: 'Bodyweight', type: 'bodyweight' },
-            instructions: 'Stand with feet shoulder-width apart, lower body as if sitting back, then return to standing',
-            videoUrl: null
-        },
-        {
-            id: 4,
-            name: 'Plank Hold',
-            description: 'Core stability exercise',
-            category: 'strength',
-            equipment: { name: 'Bodyweight', type: 'bodyweight' },
-            instructions: 'Hold body in straight line from head to heels, engaging core muscles',
-            videoUrl: null
-        },
-        {
-            id: 5,
-            name: 'Jumping Jacks',
-            description: 'Full body cardio exercise',
-            category: 'cardio',
-            equipment: { name: 'Bodyweight', type: 'bodyweight' },
-            instructions: 'Jump while raising arms overhead and spreading legs, then return to starting position',
-            videoUrl: null
-        },
-        {
-            id: 6,
-            name: 'Resistance Band Rows',
-            description: 'Back exercise using resistance bands',
-            category: 'strength',
-            equipment: { name: 'Resistance Bands', type: 'bands' },
-            instructions: 'Anchor band at chest height, pull handles toward chest while squeezing shoulder blades',
-            videoUrl: null
-        },
-        {
-            id: 7,
-            name: 'Burpees',
-            description: 'High-intensity full body exercise',
-            category: 'cardio',
-            equipment: { name: 'Bodyweight', type: 'bodyweight' },
-            instructions: 'Squat, place hands on ground, jump feet back to plank, do push-up, jump feet forward, jump up',
-            videoUrl: null
-        },
-        {
-            id: 8,
-            name: 'Mountain Climbers',
-            description: 'Dynamic cardio exercise with core engagement',
-            category: 'cardio',
-            equipment: { name: 'Bodyweight', type: 'bodyweight' },
-            instructions: 'Start in plank position, alternate bringing knees toward chest in running motion',
-            videoUrl: null
+    async function fetchExercises() {
+        try {
+            loading = true;
+            const response = await fetch('/api/exercises');
+            if (!response.ok) {
+                throw new Error('Failed to fetch exercises');
+            }
+            exercises = await response.json();
+            filteredExercises = exercises;
+        } catch (error) {
+            console.error('Error fetching exercises:', error);
+            exercises = [];
+            filteredExercises = [];
+        } finally {
+            loading = false;
         }
-    ];
+    }
+
+    async function createExercise(exerciseData) {
+        try {
+            const response = await fetch('/api/exercises', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(exerciseData)
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to create exercise');
+            }
+
+            const newExercise = await response.json();
+
+            // Add the new exercise to the list
+            exercises = [newExercise, ...exercises];
+            filteredExercises = exercises;
+
+            // Show success message
+            alertTitle = 'Exercise Created';
+            alertMessage = `"${newExercise.name}" has been added to your exercise library!`;
+            alertVariant = 'success';
+            showAlertModal = true;
+
+        } catch (error) {
+            console.error('Error creating exercise:', error);
+            alertTitle = 'Error';
+            alertMessage = 'Failed to create exercise. Please try again.';
+            alertVariant = 'error';
+            showAlertModal = true;
+        }
+    }
 
     onMount(() => {
-        // Simulate API call
-        setTimeout(() => {
-            exercises = mockExercises;
-            filteredExercises = exercises;
-            loading = false;
-        }, 500);
+        fetchExercises();
     });
 
     // Filter exercises based on search and filters
     $: {
         filteredExercises = exercises.filter(exercise => {
             const matchesSearch = exercise.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                 exercise.description.toLowerCase().includes(searchQuery.toLowerCase());
+                                 (exercise.description && exercise.description.toLowerCase().includes(searchQuery.toLowerCase()));
             const matchesCategory = selectedCategory === 'all' || exercise.category === selectedCategory;
-            const matchesEquipment = selectedEquipment === 'all' || exercise.equipment.type === selectedEquipment;
+            const matchesEquipment = selectedEquipment === 'all' ||
+                                   (exercise.equipment && exercise.equipment.type === selectedEquipment);
 
             return matchesSearch && matchesCategory && matchesEquipment;
         });
@@ -139,16 +123,21 @@
     function getEquipmentIcon(equipmentType) {
         const icons = {
             bodyweight: '👤',
-            weights: '🏋️',
-            bands: '🎯',
-            cardio: '🚴'
+            dumbbells: '🏋️',
+            resistance_bands: '🎯',
+            barbell: '🏋️',
+            kettlebell: '🏋️',
+            cardio_machine: '🚴'
         };
         return icons[equipmentType] || '👤';
     }
 
     function addToRoutine(exerciseId) {
         // This would open a modal or navigate to routine creation
-        alert(`Exercise ${exerciseId} added to routine!`);
+        alertTitle = 'Exercise Added';
+        alertMessage = `Exercise ${exerciseId} added to routine!`;
+        alertVariant = 'success';
+        showAlertModal = true;
     }
 
     function viewExercise(exerciseId) {
@@ -165,7 +154,7 @@
             <h1>Exercise Library</h1>
             <p>Browse and discover exercises for your workouts</p>
         </div>
-        <Button variant="primary">
+        <Button variant="primary" on:click={() => showAddExerciseModal = true}>
             ➕ Add Exercise
         </Button>
     </div>
@@ -221,8 +210,8 @@
 
                     <div class="exercise-meta">
                         <div class="meta-item">
-                            <span class="meta-icon">{getEquipmentIcon(exercise.equipment.type)}</span>
-                            <span class="meta-text">{exercise.equipment.name}</span>
+                            <span class="meta-icon">{getEquipmentIcon(exercise.equipment?.type || 'bodyweight')}</span>
+                            <span class="meta-text">{exercise.equipment?.name || 'Bodyweight'}</span>
                         </div>
                         <div class="meta-item">
                             <span class="meta-label">Category:</span>
@@ -234,6 +223,20 @@
                         <div class="exercise-instructions">
                             <h4>Instructions:</h4>
                             <p>{exercise.instructions}</p>
+                        </div>
+                    {/if}
+
+                    {#if exercise.safetyTips}
+                        <div class="exercise-safety">
+                            <h4>Safety Tips:</h4>
+                            <p>{exercise.safetyTips}</p>
+                        </div>
+                    {/if}
+
+                    {#if exercise.targetMuscles}
+                        <div class="exercise-targets">
+                            <h4>Target Muscles:</h4>
+                            <p>{exercise.targetMuscles}</p>
                         </div>
                     {/if}
 
@@ -254,6 +257,20 @@
         </div>
     {/if}
 </main>
+
+<AlertModal
+    bind:isOpen={showAlertModal}
+    title={alertTitle}
+    message={alertMessage}
+    variant={alertVariant}
+    on:close={() => showAlertModal = false}
+/>
+
+<AddExerciseModal
+    bind:isOpen={showAddExerciseModal}
+    on:save={createExercise}
+    on:cancel={() => showAddExerciseModal = false}
+/>
 
 <style>
     .exercises {
@@ -466,6 +483,30 @@
     }
 
     .exercise-instructions p {
+        font-size: 0.875rem;
+        color: var(--tertiary);
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .exercise-safety, .exercise-targets {
+        padding: 1rem;
+        background-color: #f8fafc;
+        border-radius: 0.5rem;
+        border-left: 4px solid var(--accent);
+        margin-top: 1rem;
+    }
+
+    .exercise-safety h4, .exercise-targets h4 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem 0;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .exercise-safety p, .exercise-targets p {
         font-size: 0.875rem;
         color: var(--tertiary);
         margin: 0;

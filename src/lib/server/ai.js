@@ -425,6 +425,50 @@ User's recent history: ${JSON.stringify(userHistory)}`;
         }
     }
 
+    // Generate exercise using AI
+    async generateExerciseWithAI(prompt) {
+        const systemPrompt = `You are an expert fitness trainer and exercise specialist. Create detailed, safe, and effective exercises based on user requests.
+
+Key Guidelines:
+- Always prioritize safety and proper form
+- Provide clear, step-by-step instructions
+- Consider available equipment and user fitness level
+- Include target muscle groups and benefits
+- Add safety tips and modifications when appropriate
+
+Format your response as JSON with this structure:
+{
+  "name": "Exercise Name",
+  "description": "Brief description of the exercise",
+  "category": "strength|cardio|flexibility|balance|sports",
+  "equipment": "bodyweight|dumbbells|resistance_bands|barbell|kettlebell|cardio_machine",
+  "instructions": "Step-by-step instructions for proper form",
+  "safetyTips": "Important safety considerations",
+  "targetMuscles": "Primary and secondary muscle groups targeted"
+}`;
+
+        const messages = [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: prompt }
+        ];
+
+        try {
+            const response = await this.generateResponse(messages);
+
+            // Try to extract JSON from the response
+            const jsonMatch = response.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                return jsonMatch[0];
+            }
+
+            // If no JSON found, return the raw response
+            return response;
+        } catch (error) {
+            console.error('Error generating exercise with AI:', error);
+            throw error;
+        }
+    }
+
     // Check OpenAI account status and quota
     async checkAccountStatus() {
         try {
@@ -453,3 +497,6 @@ User's recent history: ${JSON.stringify(userHistory)}`;
 
 // Export singleton instance
 export const workoutAI = new WorkoutAI();
+
+// Export standalone functions for convenience
+export const generateExerciseWithAI = (prompt) => workoutAI.generateExerciseWithAI(prompt);

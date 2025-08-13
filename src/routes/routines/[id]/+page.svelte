@@ -2,6 +2,8 @@
     import Nav from '$lib/components/nav.svelte';
     import Button from '$lib/components/Button.svelte';
     import Card from '$lib/components/Card.svelte';
+    import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+    import WorkoutPrintView from '$lib/components/WorkoutPrintView.svelte';
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
 
@@ -11,6 +13,8 @@
     let routine = null;
     let loading = true;
     let error = null;
+    let showDeleteModal = false;
+    let showPrintView = false;
 
     onMount(async () => {
         try {
@@ -50,10 +54,24 @@
     }
 
     function deleteRoutine() {
-        if (confirm('Are you sure you want to delete this routine? This action cannot be undone.')) {
-            // In a real app, you'd call your delete API here
-            window.location.href = '/routines';
-        }
+        showDeleteModal = true;
+    }
+
+    function openPrintView() {
+        showPrintView = true;
+    }
+
+    function closePrintView() {
+        showPrintView = false;
+    }
+
+    function confirmDelete() {
+        // In a real app, you'd call your delete API here
+        window.location.href = '/routines';
+    }
+
+    function cancelDelete() {
+        showDeleteModal = false;
     }
 
     function getCategoryIcon(category) {
@@ -108,6 +126,9 @@
             <div class="routine-actions">
                 <Button variant="success" on:click={startWorkout}>
                     ▶️ Start Workout
+                </Button>
+                <Button variant="primary" on:click={openPrintView}>
+                    🖨️ Print View
                 </Button>
                 <Button variant="secondary" on:click={editRoutine}>
                     ✏️ Edit
@@ -173,7 +194,30 @@
             <Button variant="secondary" href="/routines">← Back to Routines</Button>
         </div>
     {/if}
+
+{#if showDeleteModal}
+    <ConfirmModal
+        bind:isOpen={showDeleteModal}
+        title="Confirm Deletion"
+        message="Are you sure you want to delete this routine? This action cannot be undone."
+        variant="danger"
+        confirmText="Delete"
+        cancelText="Cancel"
+        on:confirm={confirmDelete}
+        on:cancel={cancelDelete}
+    />
+    {/if}
 </main>
+
+{#if showPrintView}
+    <div class="print-view-overlay">
+        <WorkoutPrintView
+            {routine}
+            showPrintButton={true}
+            on:back={closePrintView}
+        />
+    </div>
+{/if}
 
 <style>
     .routine-detail {
@@ -375,5 +419,17 @@
         .routine-detail {
             padding: 1rem;
         }
+    }
+
+    .print-view-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+        overflow-y: auto;
+        padding: 20px;
     }
 </style>

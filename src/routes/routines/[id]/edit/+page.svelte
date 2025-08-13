@@ -3,7 +3,8 @@
 	import Button from '$lib/components/Button.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
-	import ExerciseModal from '$lib/components/ExerciseModal.svelte';
+	import AddExerciseModal from '$lib/components/AddExerciseModal.svelte';
+	import AlertModal from '$lib/components/AlertModal.svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 
@@ -27,6 +28,13 @@
 	let isEditingExercise = false;
 	let exerciseToDelete = null;
 	let autoSaving = false;
+	let showCancelModal = false;
+
+	// Alert modal state
+	let showAlertModal = false;
+	let alertTitle = '';
+	let alertMessage = '';
+	let alertVariant = 'info';
 
 	// Drag and drop state
 	let draggedExercise = null;
@@ -125,9 +133,20 @@
 		}
 	});
 
+	function showAlert(title, message, variant = 'info') {
+		alertTitle = title;
+		alertMessage = message;
+		alertVariant = variant;
+		showAlertModal = true;
+	}
+
+	function closeAlert() {
+		showAlertModal = false;
+	}
+
 	async function saveRoutine() {
 		if (!routineName.trim()) {
-			alert('Please enter a routine name');
+			showAlert('Error', 'Please enter a routine name', 'error');
 			return;
 		}
 
@@ -170,20 +189,20 @@
 			}
 
 			console.log('✅ Routine and exercises updated successfully');
-			alert('Routine saved successfully!');
-			window.location.href = '/routines';
+			showAlert('Success', 'Routine saved successfully!', 'success');
+			setTimeout(() => {
+				window.location.href = '/routines';
+			}, 1500);
 		} catch (error) {
 			console.error('❌ Error saving routine:', error);
-			alert(`Failed to save routine: ${error.message}`);
+			showAlert('Error', `Failed to save routine: ${error.message}`, 'error');
 		} finally {
 			saving = false;
 		}
 	}
 
 	function cancelEdit() {
-		if (confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
-			window.location.href = '/routines';
-		}
+		showCancelModal = true;
 	}
 
 	function showAddExerciseModal() {
@@ -564,13 +583,38 @@
 		/>
 	{/if}
 
-	{#if showExerciseModal}
-		<ExerciseModal
-			bind:isOpen={showExerciseModal}
-			exercise={exerciseToEdit}
-			isEditing={isEditingExercise}
-			on:save={handleExerciseSave}
-			on:cancel={() => (showExerciseModal = false)}
+		{#if showExerciseModal}
+	<AddExerciseModal
+		bind:isOpen={showExerciseModal}
+		exercise={exerciseToEdit}
+		isEditing={isEditingExercise}
+		on:save={handleExerciseSave}
+		on:cancel={() => (showExerciseModal = false)}
+	/>
+	{/if}
+
+	{#if showAlertModal}
+		<AlertModal
+			bind:isOpen={showAlertModal}
+			title={alertTitle}
+			message={alertMessage}
+			variant={alertVariant}
+			on:close={closeAlert}
+		/>
+	{/if}
+
+	{#if showCancelModal}
+		<ConfirmModal
+			bind:isOpen={showCancelModal}
+			title="Confirm Cancellation"
+			message="Are you sure you want to cancel editing this routine? Any unsaved changes will be lost."
+			variant="warning"
+			confirmText="Cancel"
+			cancelText="Keep Editing"
+			on:confirm={() => {
+				window.location.href = '/routines';
+			}}
+			on:cancel={() => (showCancelModal = false)}
 		/>
 	{/if}
 </main>

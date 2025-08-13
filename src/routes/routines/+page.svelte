@@ -3,6 +3,7 @@
     import Button from '$lib/components/Button.svelte';
     import Card from '$lib/components/Card.svelte';
     import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+    import AlertModal from '$lib/components/AlertModal.svelte';
     import { onMount } from 'svelte';
 
     let routines = [];
@@ -12,6 +13,12 @@
     // Confirmation modal state
     let showDeleteModal = false;
     let routineToDelete = null;
+
+    // Alert modal state
+    let showAlertModal = false;
+    let alertTitle = '';
+    let alertMessage = '';
+    let alertVariant = 'info';
 
     // Mock data for now - will be replaced with actual API calls
     const mockRoutines = [
@@ -81,6 +88,17 @@
         showDeleteModal = true;
     }
 
+    function showAlert(title, message, variant = 'info') {
+        alertTitle = title;
+        alertMessage = message;
+        alertVariant = variant;
+        showAlertModal = true;
+    }
+
+    function closeAlert() {
+        showAlertModal = false;
+    }
+
     async function handleDeleteConfirm() {
         if (!routineToDelete) return;
 
@@ -96,11 +114,11 @@
             } else {
                 const errorData = await response.json();
                 console.error('❌ Failed to delete routine:', errorData.error);
-                alert(`Failed to delete routine: ${errorData.error}`);
+                showAlert('Error', `Failed to delete routine: ${errorData.error}`, 'error');
             }
         } catch (error) {
             console.error('❌ Error deleting routine:', error);
-            alert('Failed to delete routine. Please try again.');
+            showAlert('Error', 'Failed to delete routine. Please try again.', 'error');
         }
 
         // Reset modal state
@@ -214,6 +232,14 @@
     cancelText="Cancel"
     on:confirm={handleDeleteConfirm}
     on:cancel={handleDeleteCancel}
+/>
+
+<AlertModal
+    bind:isOpen={showAlertModal}
+    title={alertTitle}
+    message={alertMessage}
+    variant={alertVariant}
+    on:close={closeAlert}
 />
 
 <style>

@@ -2,8 +2,17 @@
     import Nav from '$lib/components/nav.svelte';
     import Button from '$lib/components/Button.svelte';
     import Card from '$lib/components/Card.svelte';
+    import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+    import AlertModal from '$lib/components/AlertModal.svelte';
 
     let saving = false;
+    let showCancelModal = false;
+
+    // Alert modal state
+    let showAlertModal = false;
+    let alertTitle = '';
+    let alertMessage = '';
+    let alertVariant = 'info';
 
     // Form data
     let routineName = '';
@@ -22,7 +31,10 @@
 
     function saveRoutine() {
         if (!routineName.trim()) {
-            alert('Please enter a routine name');
+            alertMessage = 'Please enter a routine name';
+            alertTitle = 'Error';
+            alertVariant = 'error';
+            showAlertModal = true;
             return;
         }
 
@@ -31,20 +43,24 @@
         // Simulate API call
         setTimeout(() => {
             saving = false;
-            alert('Routine created successfully!');
+            alertMessage = 'Routine created successfully!';
+            alertTitle = 'Success';
+            alertVariant = 'success';
+            showAlertModal = true;
             window.location.href = '/routines';
         }, 1000);
     }
 
     function cancelCreate() {
-        if (confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
-            window.location.href = '/routines';
-        }
+        showCancelModal = true;
     }
 
     function addExercise() {
         // This would open a modal to select exercises
-        alert('Add exercise functionality would be implemented here');
+        alertMessage = 'Add exercise functionality would be implemented here';
+        alertTitle = 'Info';
+        alertVariant = 'info';
+        showAlertModal = true;
     }
 </script>
 
@@ -187,6 +203,31 @@
             </div>
         </Card>
     </div>
+
+    {#if showCancelModal}
+        <ConfirmModal
+            bind:isOpen={showCancelModal}
+            title="Confirm Cancellation"
+            message="Are you sure you want to cancel creating this routine? Any unsaved changes will be lost."
+            variant="warning"
+            confirmText="Cancel Creation"
+            cancelText="Keep Creating"
+            on:confirm={() => {
+                window.location.href = '/routines';
+            }}
+            on:cancel={() => (showCancelModal = false)}
+        />
+    {/if}
+
+    {#if showAlertModal}
+        <AlertModal
+            bind:isOpen={showAlertModal}
+            title={alertTitle}
+            message={alertMessage}
+            variant={alertVariant}
+            on:close={() => (showAlertModal = false)}
+        />
+    {/if}
 </main>
 
 <style>

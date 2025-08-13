@@ -4,112 +4,67 @@
     import Card from '$lib/components/Card.svelte';
     import Timer from '$lib/components/Timer.svelte';
     import DifficultyRating from '$lib/components/DifficultyRating.svelte';
-    import { onMount } from 'svelte';
+    import WorkoutPrintView from '$lib/components/WorkoutPrintView.svelte';
     import { page } from '$app/stores';
 
-    // Get routine ID from URL
+    // Get routine ID from URL and data from server
     $: routineId = $page.params.id;
+    export let data;
 
-    let routine = null;
+    let routine = data.routine;
     let currentExerciseIndex = 0;
-    let currentSet = 1;
     let workoutStarted = false;
     let workoutCompleted = false;
-    let showDifficultyRating = false;
-    let currentDifficulty = null;
-    let loading = true;
-    let showWeightAdjustment = false;
-    let weightAdjustments = {};
+    let loading = false;
+    let exerciseResults = []; // Store results for each exercise
+    let showPrintView = false;
 
-    // Mock routine data - will be replaced with actual API call
-    const mockRoutine = {
-        id: routineId,
-        name: 'Upper Body Strength',
-        exercises: [
-            {
-                id: 1,
-                exercise: { name: 'Push-ups', description: 'Standard push-ups', category: 'strength' },
-                template: { sets: 3, reps: 10, weight: null, bandStrength: null, restBetweenSets: 60 },
-                equipment: { name: 'Bodyweight', type: 'bodyweight' }
-            },
-            {
-                id: 2,
-                exercise: { name: 'Dumbbell Rows', description: 'Single-arm dumbbell rows', category: 'strength' },
-                template: { sets: 3, reps: 12, weight: 25, bandStrength: null, restBetweenSets: 60 },
-                equipment: { name: 'Dumbbells', type: 'weights' }
-            },
-            {
-                id: 3,
-                exercise: { name: 'Plank Hold', description: 'Hold plank position', category: 'strength' },
-                template: { sets: 3, duration: 30, weight: null, bandStrength: null, restBetweenSets: 45 },
-                equipment: { name: 'Bodyweight', type: 'bodyweight' }
-            }
-        ]
-    };
-
-    onMount(() => {
-        // Simulate API call
-        setTimeout(() => {
-            routine = mockRoutine;
-            loading = false;
-        }, 500);
-    });
+    // Initialize routine from server data
+    routine = data.routine;
+    loading = false;
 
     function startWorkout() {
         workoutStarted = true;
-        showWeightAdjustment = true;
+        // Initialize exercise results
+        exerciseResults = routine.exercises.map(exercise => ({
+            exerciseId: exercise.id,
+            exerciseName: exercise.exercise.name,
+            targetReps: exercise.template.reps || 0,
+            targetDuration: exercise.template.duration || 0,
+            actualReps: exercise.template.reps || 0,
+            actualDuration: exercise.template.duration || 0,
+            difficulty: null,
+            notes: ''
+        }));
     }
 
-    function handleWeightAdjustment() {
-        showWeightAdjustment = false;
-        // Start first exercise
-        startNextSet();
-    }
-
-    function startNextSet() {
-        if (currentSet > routine.exercises[currentExerciseIndex].template.sets) {
-            // Move to next exercise
-            if (currentExerciseIndex < routine.exercises.length - 1) {
-                currentExerciseIndex++;
-                currentSet = 1;
-                showDifficultyRating = true;
-            } else {
-                // Workout completed
-                workoutCompleted = true;
-            }
+    function moveToNextExercise() {
+        if (currentExerciseIndex < routine.exercises.length - 1) {
+            currentExerciseIndex++;
+        } else {
+            // Workout completed
+            workoutCompleted = true;
         }
-    }
-
-    function handleDifficultyRating(event) {
-        currentDifficulty = event.detail.value;
-        showDifficultyRating = false;
-
-        // Store difficulty for weight adjustment
-        const exerciseId = routine.exercises[currentExerciseIndex].id;
-        if (!weightAdjustments[exerciseId]) {
-            weightAdjustments[exerciseId] = [];
-        }
-        weightAdjustments[exerciseId].push(currentDifficulty);
-
-        // Move to next set
-        currentSet++;
-        startNextSet();
-    }
-
-    function handleTimerComplete() {
-        // Timer finished, show difficulty rating
-        showDifficultyRating = true;
     }
 
     function handleDoneClick() {
-        if (showDifficultyRating) {
-            // User clicked done without rating, assume neutral
-            handleDifficultyRating({ detail: { value: '😐' } });
-        } else {
-            // Move to next set
-            currentSet++;
-            startNextSet();
-        }
+        // Move to next exercise
+        moveToNextExercise();
+    }
+
+    function handleTimerComplete() {
+        // Timer finished, automatically move to next exercise
+        moveToNextExercise();
+    }
+
+    function updateExerciseResult(field, value) {
+        exerciseResults[currentExerciseIndex][field] = value;
+    }
+
+    function saveWorkoutResults() {
+        // Here you would save the workout results to the database
+        console.log('Saving workout results:', exerciseResults);
+        // Navigate back to routines or show success message
     }
 
     function getCurrentExercise() {
@@ -119,9 +74,15 @@
 
     function getProgressPercentage() {
         if (!routine) return 0;
-        const totalSets = routine.exercises.reduce((sum, ex) => sum + ex.template.sets, 0);
-        const completedSets = routine.exercises.slice(0, currentExerciseIndex).reduce((sum, ex) => sum + ex.template.sets, 0) + currentSet - 1;
-        return Math.min((completedSets / totalSets) * 100, 100);
+        return Math.min(((currentExerciseIndex + 1) / routine.exercises.length) * 100, 100);
+    }
+
+    function openPrintView() {
+        showPrintView = true;
+    }
+
+    function closePrintView() {
+        showPrintView = false;
     }
 
     function formatTime(seconds) {
@@ -139,6 +100,20 @@
             <div class="loading-spinner"></div>
             <p>Loading workout...</p>
         </div>
+    {:else if !routine}
+        <div class="error-state">
+            <Card>
+                <div class="error-content">
+                    <h1>❌ Routine Not Found</h1>
+                    <p>The routine you're looking for doesn't exist or has been deleted.</p>
+                    <div class="error-actions">
+                        <Button variant="primary" href="/routines">
+                            Back to Routines
+                        </Button>
+                    </div>
+                </div>
+            </Card>
+        </div>
     {:else if !workoutStarted}
         <div class="workout-start">
             <Card>
@@ -149,44 +124,86 @@
                             <span class="info-label">Exercises:</span>
                             <span class="info-value">{routine.exercises.length}</span>
                         </div>
-                        <div class="info-item">
-                            <span class="info-label">Total Sets:</span>
-                            <span class="info-value">{routine.exercises.reduce((sum, ex) => sum + ex.template.sets, 0)}</span>
-                        </div>
                     </div>
-                    <Button variant="primary" size="large" on:click={startWorkout}>
-                        🏃 Start Workout
-                    </Button>
+                    <div class="start-actions">
+                        <Button variant="primary" size="large" on:click={startWorkout}>
+                            🏃 Start Workout
+                        </Button>
+                        <Button variant="secondary" size="large" on:click={openPrintView}>
+                            🖨️ Print Workout
+                        </Button>
+                    </div>
                 </div>
             </Card>
         </div>
-    {:else if showWeightAdjustment}
-        <div class="weight-adjustment">
-            <Card>
-                <h2>Weight Adjustments</h2>
-                <p>Based on your previous workouts, would you like to adjust weights?</p>
-                <div class="adjustment-options">
-                    <Button variant="success" on:click={handleWeightAdjustment}>
-                        Yes, adjust weights
-                    </Button>
-                    <Button variant="secondary" on:click={handleWeightAdjustment}>
-                        No, keep current weights
-                    </Button>
-                </div>
-            </Card>
-        </div>
+
     {:else if workoutCompleted}
         <div class="workout-complete">
             <Card>
                 <div class="complete-content">
                     <h1>🎉 Workout Complete!</h1>
-                    <p>Great job! You've finished your workout.</p>
+                    <p>Great job! You've finished your workout. Rate your exercises and adjust your actual performance below.</p>
+
+                    <div class="exercise-summary">
+                        {#each exerciseResults as result, index}
+                            <div class="exercise-result">
+                                <h3>{result.exerciseName}</h3>
+
+                                {#if result.targetReps > 0}
+                                    <div class="reps-adjustment">
+                                        <label for="reps-{index}">Actual Reps:</label>
+                                        <input
+                                            type="number"
+                                            id="reps-{index}"
+                                            bind:value={result.actualReps}
+                                            min="0"
+                                            max="100"
+                                        />
+                                        <span class="target-info">(Target: {result.targetReps})</span>
+                                    </div>
+                                {/if}
+
+                                {#if result.targetDuration > 0}
+                                    <div class="duration-adjustment">
+                                        <label for="duration-{index}">Actual Duration (seconds):</label>
+                                        <input
+                                            type="number"
+                                            id="duration-{index}"
+                                            bind:value={result.actualDuration}
+                                            min="0"
+                                            max="3600"
+                                        />
+                                        <span class="target-info">(Target: {formatTime(result.targetDuration)})</span>
+                                    </div>
+                                {/if}
+
+                                <div class="difficulty-rating">
+                                    <label>Difficulty:</label>
+                                    <DifficultyRating
+                                        value={result.difficulty}
+                                        on:change={(e) => result.difficulty = e.detail.value}
+                                    />
+                                </div>
+
+                                <div class="notes-section">
+                                    <label for="notes-{index}">Notes:</label>
+                                    <textarea
+                                        id="notes-{index}"
+                                        bind:value={result.notes}
+                                        placeholder="How did this exercise feel? Any adjustments needed?"
+                                        rows="2"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        {/each}
+                    </div>
+
                     <div class="complete-actions">
-                        <Button variant="primary" href="/routines">
-                            Back to Routines
+                        <Button variant="primary" on:click={saveWorkoutResults}>
+                            💾 Save Results
                         </Button>
-                        <Button variant="secondary" href="/history">
-                            View History
+                        <Button variant="secondary" href="/routines">
+                            Back to Routines
                         </Button>
                     </div>
                 </div>
@@ -212,7 +229,6 @@
                         <h2>{exercise.exercise.name}</h2>
                         <p class="exercise-description">{exercise.exercise.description}</p>
                         <div class="exercise-meta">
-                            <span class="meta-item">Set {currentSet} of {exercise.template.sets}</span>
                             <span class="meta-item">Exercise {currentExerciseIndex + 1} of {routine.exercises.length}</span>
                         </div>
                     </div>
@@ -253,22 +269,26 @@
                         {/if}
                     </div>
 
-                    {#if showDifficultyRating}
-                        <div class="difficulty-section">
-                            <DifficultyRating on:change={handleDifficultyRating} />
-                        </div>
-                    {:else}
-                        <div class="action-section">
-                            <Button variant="success" size="large" fullWidth={true} on:click={handleDoneClick}>
-                                ✅ Done
-                            </Button>
-                        </div>
-                    {/if}
+                    <div class="action-section">
+                        <Button variant="success" size="large" fullWidth={true} on:click={handleDoneClick}>
+                            ✅ Done
+                        </Button>
+                    </div>
                 </Card>
             {/if}
         </div>
     {/if}
 </main>
+
+{#if showPrintView}
+    <div class="print-view-overlay">
+        <WorkoutPrintView
+            {routine}
+            showPrintButton={true}
+            on:back={closePrintView}
+        />
+    </div>
+{/if}
 
 <style>
     .workout {
@@ -303,7 +323,8 @@
 
     .workout-start,
     .weight-adjustment,
-    .workout-complete {
+    .workout-complete,
+    .error-state {
         display: flex;
         justify-content: center;
         align-items: center;
@@ -317,7 +338,8 @@
     }
 
     .start-content h1,
-    .complete-content h1 {
+    .complete-content h1,
+    .error-content h1 {
         font-size: 2.5rem;
         font-weight: 700;
         margin: 0 0 1rem 0;
@@ -489,7 +511,6 @@
         color: var(--primary);
     }
 
-    .difficulty-section,
     .action-section {
         display: flex;
         justify-content: center;
@@ -527,5 +548,105 @@
         .reps-number {
             font-size: 3rem;
         }
+    }
+
+    /* Exercise Summary Styles */
+    .exercise-summary {
+        margin: 2rem 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .exercise-result {
+        padding: 1.5rem;
+        border: 2px solid var(--subtle);
+        border-radius: 0.75rem;
+        background-color: var(--background);
+    }
+
+    .exercise-result h3 {
+        margin: 0 0 1rem 0;
+        color: var(--primary);
+        font-size: 1.25rem;
+    }
+
+    .reps-adjustment,
+    .duration-adjustment,
+    .difficulty-rating,
+    .notes-section {
+        margin-bottom: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .reps-adjustment,
+    .duration-adjustment {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .reps-adjustment label,
+    .duration-adjustment label,
+    .difficulty-rating label,
+    .notes-section label {
+        font-weight: 600;
+        color: var(--primary);
+        min-width: 120px;
+    }
+
+    .reps-adjustment input,
+    .duration-adjustment input {
+        padding: 0.5rem;
+        border: 2px solid var(--subtle);
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        width: 80px;
+        text-align: center;
+    }
+
+    .target-info {
+        color: var(--tertiary);
+        font-size: 0.875rem;
+        font-style: italic;
+    }
+
+    .notes-section textarea {
+        padding: 0.75rem;
+        border: 2px solid var(--subtle);
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 60px;
+    }
+
+    .difficulty-rating {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .print-view-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+        overflow-y: auto;
+        padding: 20px;
+    }
+
+    .start-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+        flex-wrap: wrap;
     }
 </style>

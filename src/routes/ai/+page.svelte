@@ -2,11 +2,13 @@
     import Nav from '$lib/components/nav.svelte';
     import AIAssistant from '$lib/components/AIAssistant.svelte';
     import Card from '$lib/components/Card.svelte';
+    import Button from '$lib/components/Button.svelte';
     import { onMount } from 'svelte';
 
     let userHistory = null;
     let currentRoutine = null;
     let loading = true;
+    let routines = [];
 
     // Mock user history for demonstration
     const mockHistory = [
@@ -33,7 +35,18 @@
         }
     ];
 
-    onMount(() => {
+    onMount(async () => {
+        try {
+            // Fetch routines for the routine selector
+            const routinesResponse = await fetch('/api/routines');
+            if (routinesResponse.ok) {
+                const data = await routinesResponse.json();
+                routines = data.routines;
+            }
+        } catch (error) {
+            console.warn('Failed to fetch routines:', error);
+        }
+
         // Simulate loading user data
         setTimeout(() => {
             userHistory = mockHistory;
@@ -48,7 +61,7 @@
     <div class="ai-header">
         <div class="ai-title">
             <h1>🤖 AI Workout Assistant</h1>
-            <p>Your personal AI trainer for creating and optimizing workouts</p>
+            <p>Your personal AI trainer with intelligent auto-complete suggestions</p>
         </div>
     </div>
 
@@ -59,8 +72,35 @@
         </div>
     {:else}
         <div class="ai-content">
-            <!-- AI Assistant -->
+            <!-- AI Assistant with Integrated Prompt Builder -->
             <AIAssistant {userHistory} {currentRoutine} />
+
+            <!-- How It Works -->
+            <Card class="how-it-works">
+                <h2>🎯 How the AI Auto-Complete Works</h2>
+                <div class="steps-grid">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <h3>Start Typing</h3>
+                        <p>Begin typing what you want in the chat input. The AI will analyze your text and provide intelligent suggestions.</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <h3>Smart Suggestions</h3>
+                        <p>As you type, the AI shows relevant suggestions above the input box, just like iOS auto-complete.</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <h3>Click to Build</h3>
+                        <p>Click on suggestions to automatically build your prompt. The AI guides you through each step.</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <h3>Perfect Prompt</h3>
+                        <p>Your prompt is automatically constructed and sent to the AI for a personalized workout response.</p>
+                    </div>
+                </div>
+            </Card>
 
             <!-- AI Features Overview -->
             <div class="ai-features">
@@ -127,20 +167,20 @@
                 <h2>💡 Tips for Better AI Results</h2>
                 <div class="tips-grid">
                     <div class="tip">
+                        <h4>Start Simple</h4>
+                        <p>Begin with a basic request like "I want a workout" and let the AI guide you with suggestions.</p>
+                    </div>
+                    <div class="tip">
+                        <h4>Use the Suggestions</h4>
+                        <p>Click on the auto-complete suggestions to build your prompt step by step.</p>
+                    </div>
+                    <div class="tip">
                         <h4>Be Specific</h4>
-                        <p>Instead of "leg workout", try "30-minute leg workout focusing on quads and glutes with dumbbells"</p>
-                    </div>
-                    <div class="tip">
-                        <h4>Include Equipment</h4>
-                        <p>Tell me what equipment you have: "I only have resistance bands and a yoga mat"</p>
-                    </div>
-                    <div class="tip">
-                        <h4>Mention Goals</h4>
-                        <p>Share your fitness goals: "I want to build strength for rock climbing"</p>
+                        <p>The more details you provide, the better your workout will be tailored to your needs.</p>
                     </div>
                     <div class="tip">
                         <h4>Rate Your Workouts</h4>
-                        <p>Use the 😊😐☹️ ratings so I can learn your preferences and adjust accordingly</p>
+                        <p>Use the 😊😐☹️ ratings so I can learn your preferences and adjust accordingly.</p>
                     </div>
                 </div>
             </Card>
@@ -203,6 +243,60 @@
         gap: 3rem;
     }
 
+    /* How It Works Section */
+    .how-it-works {
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .how-it-works h2 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin: 0 0 2rem 0;
+        color: var(--primary);
+    }
+
+    .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+    }
+
+    .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .step-number {
+        width: 60px;
+        height: 60px;
+        background-color: var(--primary);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .step h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0;
+        color: var(--primary);
+    }
+
+    .step p {
+        color: var(--tertiary);
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    /* Feature Cards */
     .ai-features h2 {
         font-size: 2rem;
         font-weight: 600;
@@ -303,6 +397,10 @@
 
         .ai-title p {
             font-size: 1rem;
+        }
+
+        .steps-grid {
+            grid-template-columns: 1fr;
         }
 
         .features-grid {

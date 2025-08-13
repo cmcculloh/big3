@@ -19,6 +19,7 @@
     let bandStrength = null;
     let restBetweenSets = 60;
     let notes = '';
+    let nameError = '';
 
     // Categories and equipment options
     const categories = [
@@ -65,7 +66,7 @@
 
     function handleSubmit() {
         if (!exerciseName.trim()) {
-            alert('Exercise name is required');
+            nameError = 'Exercise name is required';
             return;
         }
 
@@ -126,7 +127,11 @@
                             placeholder="e.g., Push-ups, Squats"
                             class="form-input"
                             required
+                            on:input={() => nameError = ''}
                         />
+                        {#if nameError}
+                            <p class="error-message">{nameError}</p>
+                        {/if}
                     </div>
 
                     <div class="form-group full-width">
@@ -331,6 +336,12 @@
         display: flex;
         gap: 1rem;
         justify-content: flex-end;
+    }
+
+    .error-message {
+        color: var(--danger-color);
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
     }
 
     @keyframes fadeIn {

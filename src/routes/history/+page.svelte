@@ -2,54 +2,68 @@
     import Nav from '$lib/components/nav.svelte';
     import Button from '$lib/components/Button.svelte';
     import Card from '$lib/components/Card.svelte';
+    import AlertModal from '$lib/components/AlertModal.svelte';
     import { onMount } from 'svelte';
+
+    // Get user data from server
+    export let data;
+    $: ({ user } = data);
 
     let workoutHistory = [];
     let loading = true;
+    let timeframeLoading = false;
     let selectedTimeframe = 'month'; // 'week', 'month', 'year', 'all'
     let selectedView = 'list'; // 'list', 'calendar', 'charts'
 
-    // Mock detailed workout history data
-    const mockHistory = [
-        {
-            id: 1,
-            routineName: 'Upper Body Strength',
-            startedAt: '2024-01-15T10:30:00',
-            completedAt: '2024-01-15T11:15:00',
-            duration: 45,
-            exercises: [
-                { name: 'Push-ups', sets: 3, reps: 10, weight: null, difficulty: '😐' },
-                { name: 'Dumbbell Rows', sets: 3, reps: 12, weight: 25, difficulty: '😊' },
-                { name: 'Plank Hold', sets: 3, duration: 30, weight: null, difficulty: '☹️' }
-            ],
-            notes: 'Felt strong today, increased weight on rows',
-            totalSets: 9,
-            totalExercises: 3
-        },
-        {
-            id: 2,
-            routineName: 'Cardio Circuit',
-            startedAt: '2024-01-12T09:00:00',
-            completedAt: '2024-01-12T09:35:00',
-            duration: 35,
-            exercises: [
-                { name: 'Jumping Jacks', sets: 3, duration: 60, weight: null, difficulty: '😐' },
-                { name: 'Burpees', sets: 3, reps: 10, weight: null, difficulty: '☹️' },
-                { name: 'Mountain Climbers', sets: 3, duration: 45, weight: null, difficulty: '😐' }
-            ],
-            notes: 'Great cardio session, maintained good pace',
-            totalSets: 9,
-            totalExercises: 3
-        }
-    ];
+    // Alert modal state
+    let showAlertModal = false;
+    let alertTitle = '';
+    let alertMessage = '';
+    let alertVariant = 'info';
 
     onMount(() => {
-        // Simulate API call
-        setTimeout(() => {
-            workoutHistory = mockHistory;
-            loading = false;
-        }, 500);
+        fetchWorkoutHistory();
     });
+
+    async function fetchWorkoutHistory() {
+        try {
+            if (selectedTimeframe !== 'month') {
+                timeframeLoading = true;
+            } else {
+                loading = true;
+            }
+
+            const response = await fetch(`/api/workout-history?timeframe=${selectedTimeframe}`);
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    throw new Error('Please log in to view workout history');
+                } else if (response.status === 500) {
+                    throw new Error('Server error. Please try again later.');
+                } else {
+                    throw new Error('Failed to fetch workout history');
+                }
+            }
+
+            const data = await response.json();
+            workoutHistory = data.workoutHistory || [];
+        } catch (error) {
+            console.error('Error fetching workout history:', error);
+            alertTitle = 'Error';
+            alertMessage = error.message || 'Failed to load workout history. Please try again.';
+            alertVariant = 'error';
+            showAlertModal = true;
+            workoutHistory = [];
+        } finally {
+            loading = false;
+            timeframeLoading = false;
+        }
+    }
+
+    // Watch for timeframe changes and refetch data
+    $: if (selectedTimeframe) {
+        fetchWorkoutHistory();
+    }
 
     function formatDate(dateString) {
         const date = new Date(dateString);
@@ -87,8 +101,43 @@
     }
 
     function exportHistory() {
-        // Export workout history as CSV or JSON
-        alert('Export functionality would be implemented here');
+        if (workoutHistory.length === 0) {
+            alertTitle = 'No Data';
+            alertMessage = 'No workout history to export';
+            alertVariant = 'info';
+            showAlertModal = true;
+            return;
+        }
+
+        // Create CSV content
+        const headers = ['Date', 'Routine', 'Duration (min)', 'Exercises', 'Sets', 'Notes'];
+        const csvContent = [
+            headers.join(','),
+            ...workoutHistory.map(workout => [
+                formatDate(workout.startedAt),
+                workout.routineName,
+                workout.duration,
+                workout.exercises.map(ex => ex.name).join('; '),
+                workout.totalSets,
+                workout.notes || ''
+            ].join(','))
+        ].join('\n');
+
+        // Create and download CSV file
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `workout-history-${selectedTimeframe}-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        alertTitle = 'Export Successful';
+        alertMessage = `Workout history exported as CSV (${workoutHistory.length} workouts)`;
+        alertVariant = 'success';
+        showAlertModal = true;
     }
 
     // Calculate stats
@@ -117,12 +166,15 @@
             <p>Detailed tracking and progress analysis</p>
         </div>
         <div class="history-controls">
-            <select bind:value={selectedTimeframe} class="timeframe-select">
+            <select bind:value={selectedTimeframe} class="timeframe-select" disabled={timeframeLoading}>
                 <option value="week">This Week</option>
                 <option value="month">This Month</option>
                 <option value="year">This Year</option>
                 <option value="all">All Time</option>
             </select>
+            {#if timeframeLoading}
+                <div class="timeframe-loading">⏳</div>
+            {/if}
             <Button variant="secondary" on:click={exportHistory}>
                 📊 Export Data
             </Button>
@@ -285,6 +337,16 @@
             </div>
         </div>
     {/if}
+
+{#if showAlertModal}
+    <AlertModal
+        bind:isOpen={showAlertModal}
+        title={alertTitle}
+        message={alertMessage}
+        variant={alertVariant}
+        on:close={() => showAlertModal = false}
+    />
+{/if}
 </main>
 
 <style>
@@ -334,6 +396,18 @@
     .timeframe-select:focus {
         outline: none;
         border-color: var(--primary);
+    }
+
+    .timeframe-select:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        background-color: var(--subtle);
+    }
+
+    .timeframe-loading {
+        font-size: 1.5rem;
+        color: var(--tertiary);
+        margin-left: 1rem;
     }
 
     .stats-overview {
