@@ -40,13 +40,6 @@
             loading = false;
         }, 500);
     });
-
-    function handleSaveWorkout(event) {
-        const { workout } = event.detail;
-        // Here you would save the workout to the database
-        console.log('Saving AI-generated workout:', workout);
-        alert('Workout saved! You can find it in your routines.');
-    }
 </script>
 
 <Nav />
@@ -67,11 +60,7 @@
     {:else}
         <div class="ai-content">
             <!-- AI Assistant -->
-            <AIAssistant
-                {userHistory}
-                {currentRoutine}
-                on:saveWorkout={handleSaveWorkout}
-            />
+            <AIAssistant {userHistory} {currentRoutine} />
 
             <!-- AI Features Overview -->
             <div class="ai-features">

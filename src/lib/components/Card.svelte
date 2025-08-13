@@ -30,23 +30,24 @@
 
 <style>
 	.card {
-		background-color: white;
-		border-radius: 0.75rem;
-		border: 1px solid var(--subtle);
-		transition: all 0.2s ease;
+		background: rgba(255, 255, 255, 0.95);
+		border-radius: 1rem;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		transition: all 0.3s ease;
+		backdrop-filter: blur(10px);
 	}
 
 	/* Elevation variants */
 	.card-low {
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 	}
 
 	.card-medium {
-		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+		box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1);
 	}
 
 	.card-high {
-		box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1);
+		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 8px 20px rgba(0, 0, 0, 0.15);
 	}
 
 	/* Padding variants */
@@ -68,22 +69,22 @@
 	}
 
 	.card-clickable:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1);
+		transform: translateY(-4px);
+		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 8px 20px rgba(0, 0, 0, 0.15);
 	}
 
 	.card-clickable:focus {
-		outline: 2px solid var(--accent);
+		outline: 2px solid #667eea;
 		outline-offset: 2px;
 	}
 
 	/* Selected state */
 	.card-selected {
-		border-color: var(--primary);
-		background-color: #f8fafc;
+		border-color: #667eea;
+		background: rgba(102, 126, 234, 0.05);
 	}
 
 	.card-selected.card-clickable:hover {
-		background-color: #f1f5f9;
+		background: rgba(102, 126, 234, 0.1);
 	}
 </style>

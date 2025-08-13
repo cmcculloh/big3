@@ -184,9 +184,47 @@ Would you like me to save this as a new routine?`, workout);
         messages = [...messages, aiMessage];
     }
 
-    function saveWorkout(workoutData) {
-        dispatch('saveWorkout', { workout: workoutData });
-        addAIMessage('Great! I\'ve saved the workout to your routines. You can find it in your routine list.');
+    async function saveWorkout(workoutData, event) {
+        try {
+            // Show saving state
+            const saveButton = event?.target || event?.currentTarget;
+            if (saveButton) {
+                const originalText = saveButton.textContent;
+                saveButton.textContent = '💾 Saving...';
+                saveButton.disabled = true;
+            }
+
+            // Save the workout via API
+            const response = await fetch('/api/ai/save-workout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ workout: workoutData })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Show success message briefly
+                addAIMessage(`Great! I've saved "${workoutData.name}" as a new routine. Redirecting you to view it...`);
+
+                // Redirect to the newly created routine after a short delay
+                setTimeout(() => {
+                    window.location.href = `/routines/${data.routine.id}`;
+                }, 1500);
+            } else {
+                throw new Error(data.error || 'Failed to save workout');
+            }
+        } catch (error) {
+            console.error('Error saving workout:', error);
+            addAIMessage(`Sorry, I couldn't save the workout. Error: ${error.message}`);
+
+            // Reset button state if we have a reference
+            const saveButton = event?.target || event?.currentTarget;
+            if (saveButton) {
+                saveButton.textContent = '💾 Save as Routine';
+                saveButton.disabled = false;
+            }
+        }
     }
 
     function handleKeydown(event) {
@@ -233,7 +271,7 @@ Would you like me to save this as a new routine?`, workout);
                                     <p>Duration: {message.workoutData.estimatedDuration} minutes</p>
                                     <p>Exercises: {message.workoutData.exercises?.length || 0}</p>
 
-                                    <Button variant="primary" size="small" on:click={() => saveWorkout(message.workoutData)}>
+                                    <Button variant="primary" size="small" on:click={(event) => saveWorkout(message.workoutData, event)}>
                                         💾 Save as Routine
                                     </Button>
                                 </div>

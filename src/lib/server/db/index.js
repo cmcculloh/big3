@@ -1,10 +1,10 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { eq, desc, asc, and } from 'drizzle-orm';
+import { DATABASE_URL } from '$env/static/private';
 import * as schema from './schema.js';
 
-const connectionString = process.env.DATABASE_URL;
-const client = postgres(connectionString);
+const client = postgres(DATABASE_URL);
 export const db = drizzle(client, { schema });
 
 // Utility functions for common database operations
