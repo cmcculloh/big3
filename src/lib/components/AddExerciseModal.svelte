@@ -18,6 +18,15 @@
     let exerciseTargetMuscles = '';
     let nameError = '';
 
+    // Workout-specific fields
+    let exerciseType = 'reps'; // 'reps' or 'time'
+    let exerciseSets = 3;
+    let exerciseReps = 10;
+    let exerciseTime = 30; // seconds
+    let exerciseRestBetweenSets = 60; // seconds
+    let exerciseWeight = '';
+    let exerciseNotes = '';
+
     // AI generation
     let isGenerating = false;
     let aiDescription = '';
@@ -52,13 +61,28 @@
 
     // Initialize form when exercise changes
     $: if (exercise && isOpen) {
-        exerciseName = exercise.name || '';
-        exerciseDescription = exercise.description || '';
-        exerciseCategory = exercise.category || 'strength';
-        exerciseEquipment = exercise.equipment || 'bodyweight';
-        exerciseInstructions = exercise.instructions || '';
-        exerciseSafetyTips = exercise.safetyTips || '';
-        exerciseTargetMuscles = exercise.targetMuscles || '';
+        // Handle both old structure (exercise.name) and new structure (exercise.exercise.name)
+        exerciseName = exercise.exercise?.name || exercise.name || '';
+        exerciseDescription = exercise.exercise?.description || exercise.description || '';
+        exerciseCategory = exercise.exercise?.category || exercise.category || 'strength';
+        exerciseEquipment = exercise.exercise?.equipment || exercise.equipment || 'bodyweight';
+        exerciseInstructions = exercise.exercise?.instructions || exercise.instructions || '';
+        exerciseSafetyTips = exercise.exercise?.safetyTips || exercise.safetyTips || '';
+        exerciseTargetMuscles = exercise.exercise?.targetMuscles || exercise.targetMuscles || '';
+
+        // Handle workout-specific fields from template
+        exerciseType = exercise.template?.type || exercise.type || 'reps';
+        exerciseSets = exercise.template?.sets || exercise.sets || 3;
+        exerciseReps = exercise.template?.reps || exercise.reps || 10;
+        exerciseTime = exercise.template?.time || exercise.time || 30;
+        exerciseRestBetweenSets = exercise.template?.restBetweenSets || exercise.restBetweenSets || 60;
+        exerciseWeight = exercise.template?.weight || exercise.weight || '';
+        exerciseNotes = exercise.template?.notes || exercise.notes || '';
+
+        console.log('=== POPULATING EDIT FORM ===');
+        console.log('Exercise data received:', exercise);
+        console.log('Exercise name set to:', exerciseName);
+        console.log('Exercise template:', exercise.template);
     }
 
     // Reset form when opening for new exercise
@@ -70,6 +94,13 @@
         exerciseInstructions = '';
         exerciseSafetyTips = '';
         exerciseTargetMuscles = '';
+        exerciseType = 'reps';
+        exerciseSets = 3;
+        exerciseReps = 10;
+        exerciseTime = 30;
+        exerciseRestBetweenSets = 60;
+        exerciseWeight = '';
+        exerciseNotes = '';
         aiDescription = '';
         aiEquipment = '';
         aiTargetMuscles = '';
@@ -136,7 +167,15 @@
             equipment: exerciseEquipment,
             instructions: exerciseInstructions.trim(),
             safetyTips: exerciseSafetyTips.trim(),
-            targetMuscles: exerciseTargetMuscles.trim()
+            targetMuscles: exerciseTargetMuscles.trim(),
+            // Workout-specific data
+            type: exerciseType,
+            sets: exerciseSets,
+            reps: exerciseReps,
+            time: exerciseTime,
+            restBetweenSets: exerciseRestBetweenSets,
+            weight: exerciseWeight.trim(),
+            notes: exerciseNotes.trim()
         };
 
         dispatch('save', exerciseData);
@@ -267,6 +306,87 @@
                                 id="exercise-targets"
                                 bind:value={exerciseTargetMuscles}
                                 placeholder="Primary and secondary muscle groups targeted"
+                                class="form-textarea"
+                                rows="2"
+                            ></textarea>
+                        </div>
+
+                        <!-- Workout-specific fields -->
+                        <div class="form-group">
+                            <label for="exercise-type">Exercise Type</label>
+                            <select id="exercise-type" bind:value={exerciseType} class="form-select">
+                                <option value="reps">Reps-based</option>
+                                <option value="time">Time-based</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="exercise-sets">Sets</label>
+                            <input
+                                id="exercise-sets"
+                                type="number"
+                                bind:value={exerciseSets}
+                                min="1"
+                                max="20"
+                                class="form-input"
+                            />
+                        </div>
+
+                        {#if exerciseType === 'reps'}
+                            <div class="form-group">
+                                <label for="exercise-reps">Reps per Set</label>
+                                <input
+                                    id="exercise-reps"
+                                    type="number"
+                                    bind:value={exerciseReps}
+                                    min="1"
+                                    max="100"
+                                    class="form-input"
+                                />
+                            </div>
+                        {:else}
+                            <div class="form-group">
+                                <label for="exercise-time">Time per Set (seconds)</label>
+                                <input
+                                    id="exercise-time"
+                                    type="number"
+                                    bind:value={exerciseTime}
+                                    min="5"
+                                    max="600"
+                                    class="form-input"
+                                />
+                            </div>
+                        {/if}
+
+                        <div class="form-group">
+                            <label for="exercise-rest">Rest Between Sets (seconds)</label>
+                            <input
+                                id="exercise-rest"
+                                type="number"
+                                bind:value={exerciseRestBetweenSets}
+                                min="0"
+                                max="300"
+                                class="form-input"
+                            />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="exercise-weight">Weight (optional)</label>
+                            <input
+                                id="exercise-weight"
+                                type="text"
+                                bind:value={exerciseWeight}
+                                placeholder="e.g., 50 lbs, 25 kg"
+                                class="form-input"
+                            />
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="exercise-notes">Notes</label>
+                            <textarea
+                                id="exercise-notes"
+                                bind:value={exerciseNotes}
+                                placeholder="Any additional notes or modifications"
                                 class="form-textarea"
                                 rows="2"
                             ></textarea>

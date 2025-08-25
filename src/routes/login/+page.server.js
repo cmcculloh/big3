@@ -21,7 +21,7 @@ export const actions = {
 
         if (!validateUsername(username)) {
             return fail(400, {
-                message: 'Invalid username (min 3, max 31 characters, alphanumeric only)'
+                message: 'Invalid username (min 3, max 100 characters, alphanumeric, @, dots, hyphens, underscores)'
             });
         }
         if (!validatePassword(password)) {
@@ -58,12 +58,18 @@ export const actions = {
     },
 
     register: async (event) => {
+        console.log('=== REGISTRATION ATTEMPT ===');
         const formData = await event.request.formData();
         const username = formData.get('username');
         const password = formData.get('password');
 
+        console.log('Received username:', username);
+        console.log('Received password length:', password?.length);
+        console.log('Username type:', typeof username);
+        console.log('Password type:', typeof password);
+
         if (!validateUsername(username)) {
-            return fail(400, { message: 'Invalid username (min 3, max 31 characters, alphanumeric only)' });
+            return fail(400, { message: 'Invalid username (min 3, max 100 characters, alphanumeric, @, dots, hyphens, underscores)' });
         }
         if (!validatePassword(password)) {
             return fail(400, { message: 'Invalid password (min 6, max 255 characters)' });
@@ -118,14 +124,32 @@ function generateUserId() {
 }
 
 function validateUsername(username) {
-    return (
+    console.log('=== VALIDATING USERNAME ===');
+    console.log('Username to validate:', username);
+    console.log('Type check:', typeof username === 'string');
+    console.log('Length check:', username?.length >= 3 && username?.length <= 100);
+    console.log('Length value:', username?.length);
+    console.log('Pattern test:', /^[a-zA-Z0-9@._-]+$/.test(username));
+
+    const isValid = (
         typeof username === 'string' &&
         username.length >= 3 &&
-        username.length <= 31 &&
-        /^[a-z0-9_-]+$/.test(username)
+        username.length <= 100 &&
+        /^[a-zA-Z0-9@._-]+$/.test(username)
     );
+
+    console.log('Final validation result:', isValid);
+    return isValid;
 }
 
 function validatePassword(password) {
-    return typeof password === 'string' && password.length >= 6 && password.length <= 255;
+    console.log('=== VALIDATING PASSWORD ===');
+    console.log('Password to validate:', password ? '[REDACTED]' : 'null/undefined');
+    console.log('Type check:', typeof password === 'string');
+    console.log('Length check:', password?.length >= 6 && password?.length <= 255);
+    console.log('Length value:', password?.length);
+
+    const isValid = typeof password === 'string' && password.length >= 6 && password.length <= 255;
+    console.log('Final validation result:', isValid);
+    return isValid;
 }

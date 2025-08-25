@@ -4,7 +4,9 @@ export const user = pgTable('user', {
 	id: text('id').primaryKey(),
 	age: integer('age'),
 	username: text('username').notNull().unique(),
-	passwordHash: text('password_hash').notNull()
+	passwordHash: text('password_hash').notNull(),
+	resetToken: text('reset_token'),
+	resetTokenExpires: timestamp('reset_token_expires', { withTimezone: true, mode: 'date' })
 });
 
 export const session = pgTable('session', {
@@ -40,6 +42,7 @@ export const exerciseTemplate = pgTable('exercise_template', {
 	id: serial('id').primaryKey(),
 	exerciseId: integer('exercise_id').notNull().references(() => exercise.id),
 	userId: text('user_id').notNull().references(() => user.id),
+	type: text('type').default('reps'), // 'reps' or 'time'
 	sets: integer('sets').notNull().default(3),
 	reps: integer('reps'), // null if duration-based
 	duration: integer('duration'), // in seconds, null if rep-based

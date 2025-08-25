@@ -38,8 +38,137 @@
         return focusMap[category] || 'General Fitness';
     }
 
-    function handlePrint() {
-        window.print();
+        function handlePrint() {
+        // Create a new window with the current modal view content
+        const printWindow = window.open('', '_blank', 'width=1000,height=800');
+
+        if (printWindow) {
+            // Get the current modal content HTML
+            const modalContent = document.querySelector('.print-content');
+
+            if (modalContent) {
+                const printContent = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Print ${routine.name}</title>
+                        <style>
+                            @media print {
+                                body { margin: 0; padding: 0; }
+                                .no-print { display: none !important; }
+                                @page { margin: 0.25in; size: letter; }
+                            }
+                            body {
+                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                                margin: 0;
+                                padding: 20px;
+                                background: white;
+                            }
+                            .workout-print-view { max-width: none; margin: 0; padding: 0; }
+                            .print-content {
+                                background: white;
+                                border-radius: 0;
+                                box-shadow: none;
+                                margin: 0;
+                                padding: 0;
+                                width: 100%;
+                                height: auto;
+                                overflow: visible;
+                            }
+                            .workout-header {
+                                background: white;
+                                padding: 20px;
+                                border-bottom: 2px solid #000;
+                                margin-bottom: 20px;
+                            }
+                            .routine-name { font-size: 28px; font-weight: 700; margin-bottom: 15px; text-align: center; }
+                            .routine-meta { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
+                            .meta-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+                            .meta-label { font-size: 12px; color: #000; text-transform: uppercase; font-weight: 600; }
+                            .meta-value { font-size: 16px; color: #000; font-weight: 500; }
+                            .exercises-table { border: 1px solid #000; width: 100%; }
+                            .table-header {
+                                display: grid;
+                                grid-template-columns: 2fr 1fr 0.8fr 0.8fr 2fr;
+                                background: #f0f0f0;
+                                color: #000;
+                                font-weight: 600;
+                                padding: 15px;
+                                gap: 15px;
+                            }
+                            .header-exercise, .header-weight, .header-sets, .header-reps, .header-checkboxes { text-align: center; }
+                            .exercise-row {
+                                display: grid;
+                                grid-template-columns: 2fr 1fr 0.8fr 0.8fr 2fr;
+                                padding: 15px;
+                                gap: 15px;
+                                align-items: center;
+                                border-bottom: 1px solid #ccc;
+                                background: white;
+                            }
+                            .exercise-row:nth-child(even) { background: #f8f9fa; }
+                            .exercise-row.alternating { background: #e3f2fd; }
+                            .exercise-row.first-in-group { border-top: 2px solid #2196f3; }
+                            .exercise-row.last-in-group { border-bottom: 2px solid #2196f3; }
+                            .alternating-label { font-size: 11px; color: #1976d2; font-weight: 600; text-transform: uppercase; margin-bottom: 5px; }
+                            .exercise-name { font-weight: 600; color: #000; }
+                            .exercise-notes { font-size: 12px; color: #000; font-weight: normal; margin-top: 5px; font-style: italic; }
+                            .exercise-weight, .exercise-sets, .exercise-reps { text-align: center; font-weight: 500; color: #000; }
+                            .exercise-checkboxes { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+                            .checkbox-container { display: inline-block; position: relative; cursor: pointer; }
+                            .set-checkbox { position: absolute; opacity: 0; height: 0; width: 0; }
+                            .checkmark {
+                                height: 20px;
+                                width: 20px;
+                                background-color: white;
+                                border: 2px solid #000;
+                                border-radius: 4px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            }
+                            .set-checkbox:checked ~ .checkmark { background-color: #28a745; border-color: #28a745; }
+                            .set-checkbox:checked ~ .checkmark::after { content: '✓'; color: white; font-size: 14px; font-weight: bold; }
+                            .workout-footer {
+                                background: white;
+                                padding: 20px;
+                                border-top: 2px solid #000;
+                                margin-top: 20px;
+                            }
+                            .footer-notes, .workout-summary { margin-bottom: 20px; }
+                            .footer-notes ul { margin: 10px 0; padding-left: 20px; }
+                            .footer-notes li { margin-bottom: 5px; color: #000; }
+                            .workout-summary p { margin: 5px 0; color: #000; }
+                            .no-print { text-align: center; margin: 20px; }
+                            .print-btn { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; margin: 10px; }
+                            .back-btn { padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; margin: 10px; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="no-print">
+                            <button class="print-btn" onclick="window.print()">🖨️ Print</button>
+                            <button class="back-btn" onclick="window.close()">← Back</button>
+                        </div>
+
+                        ${modalContent.outerHTML}
+                    </body>
+                    </html>
+                `;
+
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+
+                // Auto-print after content loads
+                printWindow.onload = () => {
+                    setTimeout(() => printWindow.print(), 500);
+                };
+            } else {
+                // Fallback if modal content not found
+                printWindow.document.write('<h1>Content not available</h1>');
+                printWindow.document.close();
+            }
+        }
+
         dispatch('print');
     }
 
@@ -51,18 +180,40 @@
     // For now, we'll assume exercises with the same category and similar muscle groups
     // could be alternated. This could be enhanced with more sophisticated logic.
     function groupAlternatingExercises(exercises) {
+        // Safety check: ensure exercises is an array and has content
+        if (!exercises || !Array.isArray(exercises) || exercises.length === 0) {
+            return [];
+        }
+
         const groups = [];
         let currentGroup = [];
 
         exercises.forEach((exercise, index) => {
+            // Safety check: ensure exercise has required properties
+            if (!exercise || !exercise.template) {
+                console.warn('Exercise missing template data:', exercise);
+                return; // Skip this exercise
+            }
+
             // Simple logic: group exercises with same category and similar sets/reps
             if (currentGroup.length === 0) {
                 currentGroup.push({ ...exercise, index });
             } else {
                 const lastExercise = currentGroup[currentGroup.length - 1];
+
+                // Safety check: ensure lastExercise has template data
+                if (!lastExercise.template) {
+                    console.warn('Last exercise missing template data:', lastExercise);
+                    if (currentGroup.length > 0) {
+                        groups.push(currentGroup);
+                    }
+                    currentGroup = [{ ...exercise, index }];
+                    return;
+                }
+
                 const shouldGroup =
                     exercise.category === lastExercise.category &&
-                    Math.abs(exercise.template.sets - lastExercise.template.sets) <= 1 &&
+                    Math.abs((exercise.template.sets || 0) - (lastExercise.template.sets || 0)) <= 1 &&
                     Math.abs((exercise.template.reps || 0) - (lastExercise.template.reps || 0)) <= 5;
 
                 if (shouldGroup) {
@@ -123,7 +274,8 @@
                     <div class="header-checkboxes">Set Tracking</div>
                 </div>
 
-                {#each groupAlternatingExercises(routine.exercises) as exerciseGroup, groupIndex}
+                {#if routine.exercises && routine.exercises.length > 0}
+                    {#each groupAlternatingExercises(routine.exercises) as exerciseGroup, groupIndex}
                     {#each exerciseGroup as exercise, exerciseIndex}
                         {@const isAlternating = exerciseGroup.length > 1}
                         {@const isFirstInGroup = exerciseIndex === 0}
@@ -176,6 +328,11 @@
                         </div>
                     {/each}
                 {/each}
+                {:else}
+                    <div class="no-exercises">
+                        <p>No exercises found in this routine.</p>
+                    </div>
+                {/if}
             </div>
 
             <!-- Footer Section -->
@@ -184,15 +341,15 @@
                     <p><strong>Notes:</strong></p>
                     <ul>
                         <li>Check off each set as you complete it</li>
-                        <li>Rest {routine.exercises[0]?.template.restBetweenSets || 60} seconds between sets</li>
+                        <li>Rest {routine.exercises && routine.exercises[0]?.template?.restBetweenSets || 60} seconds between sets</li>
                         <li>Listen to your body and adjust weight/reps as needed</li>
                     </ul>
                 </div>
 
                 <div class="workout-summary">
                     <p><strong>Workout Summary:</strong></p>
-                    <p>Total Exercises: {routine.exercises.length}</p>
-                    <p>Total Sets: {routine.exercises.reduce((total, ex) => total + ex.template.sets, 0)}</p>
+                    <p>Total Exercises: {routine.exercises ? routine.exercises.length : 0}</p>
+                    <p>Total Sets: {routine.exercises ? routine.exercises.reduce((total, ex) => total + (ex.template?.sets || 0), 0) : 0}</p>
                     <p>Estimated Time: {formatDuration(routine.estimatedDuration)}</p>
                 </div>
             </div>
@@ -253,7 +410,6 @@
         background: white;
         border-radius: 8px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
     }
 
     .workout-header {
@@ -299,6 +455,8 @@
 
     .exercises-table {
         border: 1px solid #dee2e6;
+        overflow-x: auto;
+        max-width: 100%;
     }
 
     .table-header {
@@ -309,10 +467,14 @@
         font-weight: 600;
         padding: 15px;
         gap: 15px;
+        min-width: 0;
     }
 
     .header-exercise, .header-weight, .header-sets, .header-reps, .header-checkboxes {
         text-align: center;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .exercise-row {
@@ -323,6 +485,7 @@
         align-items: center;
         border-bottom: 1px solid #dee2e6;
         transition: background-color 0.2s ease;
+        min-width: 0;
     }
 
     .exercise-row:nth-child(even) {
@@ -356,6 +519,8 @@
     .exercise-name {
         font-weight: 600;
         color: #212529;
+        min-width: 0;
+        overflow: hidden;
     }
 
     .exercise-notes {
@@ -449,29 +614,17 @@
         color: #6c757d;
     }
 
-    /* Print-specific styles */
+    .no-exercises {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+        font-style: italic;
+    }
+
+    /* Simple print styles for the component itself */
     @media print {
         .print-controls {
-            display: none;
-        }
-
-        .workout-print-view {
-            max-width: none;
-            margin: 0;
-            padding: 0;
-        }
-
-        .print-content {
-            box-shadow: none;
-            border-radius: 0;
-        }
-
-        .exercise-row {
-            break-inside: avoid;
-        }
-
-        .workout-footer {
-            break-inside: avoid;
+            display: none !important;
         }
     }
 </style>

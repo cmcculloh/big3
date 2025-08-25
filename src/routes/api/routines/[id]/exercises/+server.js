@@ -31,6 +31,20 @@ export async function PUT({ params, request }) {
             return json({ error: 'Exercises must be an array' }, { status: 400 });
         }
 
+        // Debug: Log the received data
+        console.log('=== RECEIVED EXERCISE DATA ===');
+        console.log('Exercises array:', JSON.stringify(exercises, null, 2));
+        exercises.forEach((ex, index) => {
+            console.log(`Exercise ${index}:`, {
+                name: ex.name,
+                type: ex.type,
+                sets: ex.sets,
+                reps: ex.reps,
+                time: ex.time,
+                weight: ex.weight
+            });
+        });
+
         // Start a transaction
         const result = await db.transaction(async (tx) => {
             // First, get all existing exercise template IDs for this routine
@@ -55,11 +69,25 @@ export async function PUT({ params, request }) {
             for (let i = 0; i < exercises.length; i++) {
                 const exerciseData = exercises[i];
 
+                // Validate required fields
+                if (!exerciseData.name || exerciseData.name.trim() === '') {
+                    console.error(`Exercise ${i} missing name:`, exerciseData);
+                    throw new Error(`Exercise ${i + 1} is missing a name`);
+                }
+
                 // Clean and parse numeric values
                 const cleanWeight = parseWeight(exerciseData.weight);
                 const cleanSets = parseInt(exerciseData.sets) || 3;
                 const cleanReps = parseInt(exerciseData.reps) || 10;
-                const cleanDuration = parseInt(exerciseData.duration) || null;
+
+                // Handle both old duration field and new time field
+                let cleanDuration = null;
+                if (exerciseData.type === 'time') {
+                    cleanDuration = parseInt(exerciseData.time) || 30;
+                } else if (exerciseData.duration) {
+                    cleanDuration = parseInt(exerciseData.duration) || null;
+                }
+
                 const cleanRestBetweenSets = parseInt(exerciseData.restBetweenSets) || 60;
 
                 // Create the exercise record
@@ -74,6 +102,7 @@ export async function PUT({ params, request }) {
                 const [template] = await tx.insert(exerciseTemplate).values({
                     exerciseId: exerciseRecord.id,
                     userId: 'demo-user',
+                    type: exerciseData.type || 'reps',
                     sets: cleanSets,
                     reps: cleanReps,
                     duration: cleanDuration,

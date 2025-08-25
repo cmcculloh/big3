@@ -5,8 +5,8 @@
     import { onMount } from 'svelte';
 
     let { form } = $props();
-    let isLoading = false;
-    let isLoginMode = true; // true for login, false for register
+    let isLoading = $state(false);
+    let isLoginMode = $state(true); // true for login, false for register
 
     onMount(() => {
         // Redirect if already logged in
@@ -41,7 +41,8 @@
                 <p>{isLoginMode ? 'Sign in to track your workouts and progress' : 'Join Big3 Fitness to start your fitness journey'}</p>
             </div>
 
-            <form method="post" action={isLoginMode ? "?/login" : "?/register"} on:submit={handleSubmit}>
+            <form method="post" action={isLoginMode ? "?/login" : "?/register"}>
+
                 <div class="form-group">
                     <label for="username">Username</label>
                     <input
@@ -50,12 +51,11 @@
                         type="text"
                         required
                         minlength="3"
-                        maxlength="31"
-                        pattern="[a-z0-9_-]+"
+                                                    maxlength="100"
+                                                    pattern="[a-zA-Z0-9@._-]+"
                         placeholder="Enter your username"
-                        disabled={isLoading}
                     />
-                    <small>3-31 characters, alphanumeric, hyphens, underscores only</small>
+                    <small>3-100 characters, alphanumeric, @, dots, hyphens, underscores</small>
                 </div>
 
                 <div class="form-group">
@@ -67,7 +67,6 @@
                         required
                         minlength="6"
                         placeholder="Enter your password"
-                        disabled={isLoading}
                     />
                     <small>Minimum 6 characters</small>
                 </div>
@@ -82,7 +81,6 @@
                     type="submit"
                     variant="primary"
                     class="submit-btn"
-                    disabled={isLoading}
                 >
                     {#if isLoginMode}
                         {isLoading ? 'Signing In...' : 'Sign In'}
@@ -92,22 +90,28 @@
                 </Button>
             </form>
 
-            <div class="mode-toggle">
-                <p>
-                    {#if isLoginMode}
-                        Don't have an account?
-                    {:else}
-                        Already have an account?
-                    {/if}
-                    <button type="button" class="toggle-btn" on:click={toggleMode}>
+                            <div class="mode-toggle">
+                    <p>
                         {#if isLoginMode}
-                            Create an Account
+                            Don't have an account?
                         {:else}
-                            Sign In
+                            Already have an account?
                         {/if}
-                    </button>
-                </p>
-            </div>
+                        <button type="button" class="toggle-btn" onclick={toggleMode}>
+                            {#if isLoginMode}
+                                Create an Account
+                            {:else}
+                                Sign In
+                            {/if}
+                        </button>
+                    </p>
+
+                    {#if isLoginMode}
+                        <div class="forgot-password">
+                            <a href="/forgot-password" class="forgot-link">Forgot your password?</a>
+                        </div>
+                    {/if}
+                </div>
         </Card>
     </div>
 </main>
@@ -232,6 +236,23 @@
     .toggle-btn:focus {
         outline: 2px solid var(--primary);
         outline-offset: 2px;
+    }
+
+    .forgot-password {
+        margin-top: 1rem;
+        text-align: center;
+    }
+
+    .forgot-link {
+        color: var(--tertiary);
+        text-decoration: none;
+        font-size: 0.875rem;
+        transition: color 0.2s ease;
+    }
+
+    .forgot-link:hover {
+        color: var(--primary);
+        text-decoration: underline;
     }
 
     @media (max-width: 480px) {

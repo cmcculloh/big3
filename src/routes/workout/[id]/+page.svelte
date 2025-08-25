@@ -8,23 +8,36 @@
     import { page } from '$app/stores';
 
     // Get routine ID from URL and data from server
-    $: routineId = $page.params.id;
-    export let data;
+    let routineId = $derived($page.params.id);
+    let { data } = $props();
 
     let routine = data.routine;
-    let currentExerciseIndex = 0;
-    let workoutStarted = false;
-    let workoutCompleted = false;
-    let loading = false;
-    let exerciseResults = []; // Store results for each exercise
-    let showPrintView = false;
+    let currentExerciseIndex = $state(0);
+    let currentSetNumber = $state(1); // Track current set within exercise
+    let workoutStarted = $state(false);
+    let workoutCompleted = $state(false);
+    let loading = $state(false);
+    let exerciseResults = $state([]); // Store results for each exercise
+    let showPrintView = $state(false);
 
     // Initialize routine from server data
     routine = data.routine;
     loading = false;
 
+    // Debug: Log routine data
+    console.log('=== ROUTINE DATA ===');
+    console.log('Routine:', routine);
+    console.log('Exercises array:', routine?.exercises);
+    if (routine?.exercises) {
+        routine.exercises.forEach((ex, i) => {
+            console.log(`Exercise ${i}:`, ex.exercise?.name);
+        });
+    }
+
     function startWorkout() {
         workoutStarted = true;
+        currentExerciseIndex = 0;
+        currentSetNumber = 1; // Start with set 1
         // Initialize exercise results
         exerciseResults = routine.exercises.map(exercise => ({
             exerciseId: exercise.id,
@@ -38,18 +51,45 @@
         }));
     }
 
+    function moveToNextSet() {
+        const currentExercise = routine.exercises[currentExerciseIndex];
+        const totalSets = currentExercise.template.sets || 1;
+
+        console.log('=== MOVING TO NEXT SET ===');
+        console.log('Current set:', currentSetNumber);
+        console.log('Total sets:', totalSets);
+
+        if (currentSetNumber < totalSets) {
+            // Move to next set within same exercise
+            currentSetNumber++;
+            console.log('Moved to set:', currentSetNumber);
+        } else {
+            // All sets completed for this exercise, move to next exercise
+            moveToNextExercise();
+        }
+    }
+
     function moveToNextExercise() {
+        console.log('=== MOVING TO NEXT EXERCISE ===');
+        console.log('Current index before:', currentExerciseIndex);
+        console.log('Total exercises:', routine.exercises.length);
+
         if (currentExerciseIndex < routine.exercises.length - 1) {
             currentExerciseIndex++;
+            currentSetNumber = 1; // Reset set number for new exercise
+            console.log('Moved to exercise index:', currentExerciseIndex);
+            console.log('Exercise name:', routine.exercises[currentExerciseIndex]?.exercise?.name);
+            console.log('Reset set number to:', currentSetNumber);
         } else {
             // Workout completed
+            console.log('Workout completed!');
             workoutCompleted = true;
         }
     }
 
     function handleDoneClick() {
-        // Move to next exercise
-        moveToNextExercise();
+        // Move to next set or next exercise
+        moveToNextSet();
     }
 
     function handleTimerComplete() {
@@ -68,8 +108,20 @@
     }
 
     function getCurrentExercise() {
-        if (!routine || currentExerciseIndex >= routine.exercises.length) return null;
-        return routine.exercises[currentExerciseIndex];
+        console.log('=== GETTING CURRENT EXERCISE ===');
+        console.log('Current index:', currentExerciseIndex);
+        console.log('Routine exists:', !!routine);
+        console.log('Exercises array length:', routine?.exercises?.length);
+        console.log('Index in bounds:', currentExerciseIndex < (routine?.exercises?.length || 0));
+
+        if (!routine || currentExerciseIndex >= routine.exercises.length) {
+            console.log('Returning null - no exercise found');
+            return null;
+        }
+
+        const exercise = routine.exercises[currentExerciseIndex];
+        console.log('Returning exercise:', exercise?.exercise?.name);
+        return exercise;
     }
 
     function getProgressPercentage() {
@@ -223,48 +275,58 @@
 
             <!-- Current Exercise -->
             {#if getCurrentExercise()}
-                {@const exercise = getCurrentExercise()}
+                {@const currentExercise = getCurrentExercise()}
                 <Card class="exercise-card">
                     <div class="exercise-header">
-                        <h2>{exercise.exercise.name}</h2>
-                        <p class="exercise-description">{exercise.exercise.description}</p>
+                        <h2>{currentExercise.exercise.name}</h2>
+                        <p class="exercise-description">{currentExercise.exercise.description}</p>
                         <div class="exercise-meta">
                             <span class="meta-item">Exercise {currentExerciseIndex + 1} of {routine.exercises.length}</span>
                         </div>
                     </div>
 
                     <div class="exercise-content">
-                        {#if exercise.template.duration}
-                            <!-- Duration-based exercise -->
+                        {#if currentExercise.template.type === 'time' || currentExercise.template.duration}
+                            <!-- Time-based exercise -->
                             <div class="timer-section">
                                 <Timer
-                                    duration={exercise.template.duration}
+                                    duration={currentExercise.template.time || currentExercise.template.duration || 30}
                                     autoStart={true}
                                     showControls={false}
                                     on:complete={handleTimerComplete}
                                 />
+                                {#if (currentExercise.template.sets || 1) > 1}
+                                    <div class="sets-info">
+                                        <span class="sets-label">Set {currentSetNumber} of {currentExercise.template.sets || 1}</span>
+                                    </div>
+                                {/if}
                             </div>
                         {:else}
                             <!-- Rep-based exercise -->
                             <div class="reps-section">
                                 <div class="reps-display">
-                                    <span class="reps-number">{exercise.template.reps}</span>
+                                    <span class="reps-number">{currentExercise.template.reps || 10}</span>
                                     <span class="reps-label">reps</span>
                                 </div>
+                                {#if (currentExercise.template.sets || 1) > 1}
+                                    <div class="sets-info">
+                                        <span class="sets-label">Set {currentSetNumber} of {currentExercise.template.sets || 1}</span>
+                                    </div>
+                                {/if}
                             </div>
                         {/if}
 
-                        {#if exercise.template.weight}
+                        {#if currentExercise.template.weight}
                             <div class="weight-display">
                                 <span class="weight-label">Weight:</span>
-                                <span class="weight-value">{exercise.template.weight} lbs</span>
+                                <span class="weight-value">{currentExercise.template.weight}</span>
                             </div>
                         {/if}
 
-                        {#if exercise.template.bandStrength}
+                        {#if currentExercise.template.bandStrength}
                             <div class="band-display">
                                 <span class="band-label">Band:</span>
-                                <span class="band-value">{exercise.template.bandStrength}</span>
+                                <span class="band-value">{currentExercise.template.bandStrength}</span>
                             </div>
                         {/if}
                     </div>
@@ -648,5 +710,19 @@
         justify-content: center;
         margin-top: 2rem;
         flex-wrap: wrap;
+    }
+
+    .sets-info {
+        text-align: center;
+        margin-top: 1rem;
+        padding: 0.5rem;
+        background-color: var(--subtle);
+        border-radius: 0.5rem;
+    }
+
+    .sets-label {
+        font-size: 0.875rem;
+        color: var(--tertiary);
+        font-weight: 500;
     }
 </style>

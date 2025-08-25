@@ -32,6 +32,7 @@ export async function GET({ params }) {
                 },
                 template: {
                     id: exerciseTemplate.id,
+                    type: exerciseTemplate.type,
                     sets: exerciseTemplate.sets,
                     reps: exerciseTemplate.reps,
                     duration: exerciseTemplate.duration,
@@ -56,17 +57,23 @@ export async function GET({ params }) {
             estimatedDuration: routineData.estimatedDuration,
             exercises: routineExercises.map(re => ({
                 id: re.exercise.id,
-                name: re.exercise.name,
-                description: re.exercise.description,
-                category: re.exercise.category,
-                sets: re.template.sets,
-                reps: re.template.reps,
-                duration: re.template.duration,
-                restBetweenSets: re.template.restBetweenSets,
-                equipment: 'bodyweight', // Default for now
-                weight: re.template.weight,
-                bandStrength: re.template.bandStrength,
-                notes: re.template.notes
+                exercise: {
+                    id: re.exercise.id,
+                    name: re.exercise.name,
+                    description: re.exercise.description,
+                    category: re.exercise.category
+                },
+                template: {
+                    id: re.template.id,
+                    type: re.template.type,
+                    sets: re.template.sets,
+                    reps: re.template.reps,
+                    duration: re.template.duration,
+                    restBetweenSets: re.template.restBetweenSets,
+                    weight: re.template.weight,
+                    bandStrength: re.template.bandStrength,
+                    notes: re.template.notes
+                }
             }))
         };
 

@@ -101,14 +101,23 @@ export async function load({ params, locals }) {
             const difficulty = avgDifficulty <= 1.5 ? '😊' : avgDifficulty <= 2.5 ? '😐' : '☹️';
 
             return {
-                name: exercise.name,
-                sets: exercise.sets,
-                reps: exercise.reps,
-                duration: exercise.duration,
-                weight: exercise.weight,
-                bandStrength: exercise.bandStrength,
-                difficulty: difficulty,
-                notes: exercise.notes
+                id: exercise.performances[0]?.exerciseTemplate?.id || 0,
+                exercise: {
+                    id: exercise.performances[0]?.exercise?.id || 0,
+                    name: exercise.name,
+                    description: exercise.performances[0]?.exercise?.description || '',
+                    category: exercise.performances[0]?.exercise?.category || 'strength'
+                },
+                template: {
+                    id: exercise.performances[0]?.exerciseTemplate?.id || 0,
+                    sets: exercise.sets,
+                    reps: exercise.reps,
+                    duration: exercise.duration,
+                    weight: exercise.weight,
+                    bandStrength: exercise.bandStrength,
+                    notes: exercise.notes
+                },
+                difficulty: difficulty
             };
         });
 

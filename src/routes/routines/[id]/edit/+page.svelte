@@ -41,6 +41,8 @@
 	let draggedOverExercise = null;
 	let dragOverIndex = -1;
 
+
+
 	// Mock routine data - will be replaced with actual API call
 	const mockRoutine = {
 		id: routineId,
@@ -103,13 +105,48 @@
 			if (response.ok) {
 				const data = await response.json();
 				console.log('✅ Routine data received for editing:', data);
+
+				// Debug: Check raw API response
+				console.log('=== RAW API RESPONSE ===');
+				console.log('Routine exercises from API:', data.routine.exercises);
+				if (data.routine.exercises && data.routine.exercises.length > 0) {
+					console.log('First exercise template:', data.routine.exercises[0].template);
+					console.log('First exercise template keys:', Object.keys(data.routine.exercises[0].template || {}));
+				}
+
 				routine = data.routine;
+
+				// Debug: Check exercise data structure
+				console.log('=== EXERCISE DATA STRUCTURE ON LOAD ===');
+				routine.exercises.forEach((ex, index) => {
+					console.log(`Exercise ${index}:`, {
+						name: ex.exercise?.name || ex.name,
+						template: ex.template,
+						type: ex.template?.type,
+						sets: ex.template?.sets,
+						reps: ex.template?.reps,
+						duration: ex.template?.duration
+					});
+
+					// More detailed template inspection
+					if (ex.template) {
+						console.log(`  Template details for Exercise ${index}:`, {
+							hasType: 'type' in ex.template,
+							typeValue: ex.template.type,
+							typeUndefined: ex.template.type === undefined,
+							typeNull: ex.template.type === null,
+							allKeys: Object.keys(ex.template)
+						});
+					}
+				});
 
 				// Populate form with existing data
 				routineName = routine.name;
 				routineDescription = routine.description;
 				routineCategory = routine.category;
-				estimatedDuration = routine.estimatedDuration;
+
+				// Calculate estimated duration based on exercises
+				updateEstimatedDuration();
 			} else {
 				console.warn('⚠️ Failed to fetch routine for editing, using mock data');
 				// Fallback to mock data if API fails
@@ -117,7 +154,9 @@
 				routineName = routine.name;
 				routineDescription = routine.description;
 				routineCategory = routine.category;
-				estimatedDuration = routine.estimatedDuration;
+
+				// Calculate estimated duration based on exercises
+				updateEstimatedDuration();
 			}
 
 			loading = false;
@@ -128,7 +167,9 @@
 			routineName = routine.name;
 			routineDescription = routine.description;
 			routineCategory = routine.category;
-			estimatedDuration = routine.estimatedDuration;
+
+			// Calculate estimated duration based on exercises
+			updateEstimatedDuration();
 			loading = false;
 		}
 	});
@@ -144,6 +185,8 @@
 		showAlertModal = false;
 	}
 
+
+
 	async function saveRoutine() {
 		if (!routineName.trim()) {
 			showAlert('Error', 'Please enter a routine name', 'error');
@@ -153,7 +196,19 @@
 		saving = true;
 
 		try {
-			// First save the routine details
+			// First update the estimated duration based on current exercises
+			updateEstimatedDuration();
+
+			console.log('=== SAVING ROUTINE ===');
+			console.log('Estimated duration to save:', estimatedDuration);
+			console.log('Routine data being saved:', {
+				name: routineName,
+				description: routineDescription,
+				category: routineCategory,
+				estimatedDuration: estimatedDuration
+			});
+
+			// Then save the routine details
 			const routineResponse = await fetch(`/api/routines/${routineId}`, {
 				method: 'PUT',
 				headers: {
@@ -172,27 +227,13 @@
 				throw new Error(errorData.error || 'Failed to update routine');
 			}
 
-			// Then save the exercises
-			const exercisesResponse = await fetch(`/api/routines/${routineId}/exercises`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					exercises: routine.exercises
-				})
-			});
+			// Then save the exercises using the transformation function
+			await saveExercisesToDatabase();
 
-			if (!exercisesResponse.ok) {
-				const errorData = await exercisesResponse.json();
-				throw new Error(errorData.error || 'Failed to update exercises');
-			}
+						console.log('✅ Routine and exercises updated successfully');
 
-			console.log('✅ Routine and exercises updated successfully');
-			showAlert('Success', 'Routine saved successfully!', 'success');
-			setTimeout(() => {
-				window.location.href = '/routines';
-			}, 1500);
+			// Redirect back to routines page with success parameter
+			window.location.href = `/routines?updated=${routineId}`;
 		} catch (error) {
 			console.error('❌ Error saving routine:', error);
 			showAlert('Error', `Failed to save routine: ${error.message}`, 'error');
@@ -221,10 +262,35 @@
 		const exerciseData = event.detail;
 
 		if (isEditingExercise && exerciseToEdit) {
-			// Update existing exercise
+			// Update existing exercise - preserve structure, update template
 			const index = routine.exercises.findIndex((ex) => ex.id === exerciseToEdit.id);
 			if (index !== -1) {
-				routine.exercises[index] = { ...exerciseToEdit, ...exerciseData };
+				// Update the template with new workout parameters
+				const updatedExercise = { ...exerciseToEdit };
+				if (updatedExercise.template) {
+					updatedExercise.template = {
+						...updatedExercise.template,
+						type: exerciseData.type || 'reps',
+						sets: exerciseData.sets || 3,
+						reps: exerciseData.type === 'reps' ? exerciseData.reps : null,
+						duration: exerciseData.type === 'time' ? exerciseData.time : null,
+						weight: exerciseData.weight || null,
+						restBetweenSets: exerciseData.restBetweenSets || 60,
+						notes: exerciseData.notes || ''
+					};
+				} else {
+					// Fallback for old structure
+					updatedExercise.template = {
+						type: exerciseData.type || 'reps',
+						sets: exerciseData.sets || 3,
+						reps: exerciseData.type === 'reps' ? exerciseData.reps : null,
+						duration: exerciseData.type === 'time' ? exerciseData.time : null,
+						weight: exerciseData.weight || null,
+						restBetweenSets: exerciseData.restBetweenSets || 60,
+						notes: exerciseData.notes || ''
+					};
+				}
+				routine.exercises[index] = updatedExercise;
 			}
 		} else {
 			// Add new exercise
@@ -270,31 +336,99 @@
 		let totalDuration = 0;
 
 		routine.exercises.forEach((exercise) => {
-			const exerciseTime = exercise.sets * (exercise.restBetweenSets || 60);
-			if (exercise.duration) {
-				totalDuration += exercise.sets * exercise.duration;
+			// Handle both old structure and new nested structure
+			const sets = exercise.template?.sets || exercise.sets || 3;
+			const duration = exercise.template?.duration || exercise.duration;
+			const restBetweenSets = exercise.template?.restBetweenSets || exercise.restBetweenSets || 60;
+
+			if (duration) {
+				// Time-based exercise
+				totalDuration += sets * duration;
 			} else {
-				totalDuration += exercise.sets * 30; // Assume 30 seconds per set
+				// Reps-based exercise - assume 30 seconds per set
+				totalDuration += sets * 30;
 			}
-			totalDuration += exercise.restBetweenSets || 60;
+
+			// Add rest time between sets
+			totalDuration += restBetweenSets;
 		});
 
 		// Add warm-up and cool-down time
 		totalDuration += 300; // 5 minutes for warm-up/cool-down
 
 		estimatedDuration = Math.ceil(totalDuration / 60); // Convert to minutes
+
+		console.log('=== DURATION CALCULATION ===');
+		console.log('Total duration (seconds):', totalDuration);
+		console.log('Estimated duration (minutes):', estimatedDuration);
+		console.log('Routine exercises:', routine.exercises);
+		routine.exercises.forEach((ex, index) => {
+			console.log(`Exercise ${index}:`, {
+				name: ex.exercise?.name || ex.name,
+				sets: ex.template?.sets || ex.sets,
+				duration: ex.template?.duration || ex.duration,
+				rest: ex.template?.restBetweenSets || ex.restBetweenSets
+			});
+		});
 	}
 
 	async function saveExercisesToDatabase() {
 		autoSaving = true;
 		try {
+						// Transform the nested exercise structure to flat structure for the server
+			const exercisesForServer = routine.exercises.map((exercise, index) => {
+				console.log(`=== TRANSFORMING EXERCISE ${index} ===`);
+				console.log('Original exercise:', exercise);
+				console.log('exercise.exercise:', exercise.exercise);
+				console.log('exercise.template:', exercise.template);
+
+				// Extract exercise details and template details
+				const exerciseData = {
+					name: exercise.exercise?.name || exercise.name || 'Unnamed Exercise',
+					description: exercise.exercise?.description || exercise.description || '',
+					category: exercise.exercise?.category || exercise.category || 'strength',
+					// Template/workout parameters - be more explicit about type detection
+					type: exercise.template?.type || (exercise.template?.duration ? 'time' : 'reps'),
+					sets: exercise.template?.sets || exercise.sets || 3,
+					reps: exercise.template?.reps || exercise.reps || 10,
+					time: exercise.template?.duration || exercise.duration || 30,
+					weight: exercise.template?.weight || exercise.weight || '',
+					restBetweenSets: exercise.template?.restBetweenSets || exercise.restBetweenSets || 60,
+					notes: exercise.template?.notes || exercise.notes || ''
+				};
+
+				// Ensure we have a valid name
+				if (!exerciseData.name || exerciseData.name === 'Unnamed Exercise') {
+					// Try to find the name in different possible locations
+					if (exercise.exercise && exercise.exercise.name) {
+						exerciseData.name = exercise.exercise.name;
+					} else if (exercise.name) {
+						exerciseData.name = exercise.name;
+					} else {
+						console.error(`❌ Cannot find name for exercise ${index}:`, exercise);
+						throw new Error(`Exercise ${index + 1} has no name field`);
+					}
+				}
+
+				console.log('Transformed exercise for server:', exerciseData);
+				console.log('Name field:', exerciseData.name);
+
+				// Validate the transformed data
+				if (!exerciseData.name || exerciseData.name.trim() === '') {
+					console.error(`❌ Exercise ${index} has empty name after transformation:`, exerciseData);
+					throw new Error(`Exercise ${index + 1} has an empty name`);
+				}
+
+				return exerciseData;
+			});
+
 			const response = await fetch(`/api/routines/${routineId}/exercises`, {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
-					exercises: routine.exercises
+					exercises: exercisesForServer
 				})
 			});
 
@@ -435,6 +569,8 @@
 		</div>
 	</div>
 
+
+
 	{#if loading}
 		<div class="loading">
 			<div class="loading-spinner"></div>
@@ -527,19 +663,31 @@
 								<div class="exercise-info">
 									<div class="drag-handle">⋮⋮</div>
 									<div class="exercise-content">
-										<div class="exercise-name">{exercise.name}</div>
+										<div class="exercise-name">{exercise.exercise?.name || exercise.name || 'Unnamed Exercise'}</div>
 										<div class="exercise-details">
-											{#if exercise.reps}
+											{#if exercise.template?.type === 'time' && exercise.template?.duration}
+												<span class="detail">{exercise.template.sets} sets × {exercise.template.duration}s</span>
+											{:else if exercise.template?.type === 'reps' && exercise.template?.reps}
+												<span class="detail">{exercise.template.sets} sets × {exercise.template.reps} reps</span>
+											{:else if exercise.template?.duration}
+												<span class="detail">{exercise.template.sets} sets × {exercise.template.duration}s</span>
+											{:else if exercise.template?.reps}
+												<span class="detail">{exercise.template.sets} sets × {exercise.template.reps} reps</span>
+											{:else if exercise.reps}
 												<span class="detail">{exercise.sets} sets × {exercise.reps} reps</span>
 											{:else if exercise.duration}
 												<span class="detail">{exercise.sets} sets × {exercise.duration}s</span>
 											{:else}
-												<span class="detail">{exercise.sets} sets</span>
+												<span class="detail">{exercise.template?.sets || exercise.sets || 0} sets</span>
 											{/if}
-											{#if exercise.weight}
+											{#if exercise.template?.weight}
+												<span class="detail">@ {exercise.template.weight} lbs</span>
+											{:else if exercise.weight}
 												<span class="detail">@ {exercise.weight} lbs</span>
 											{/if}
-											{#if exercise.bandStrength}
+											{#if exercise.template?.bandStrength}
+												<span class="detail">@ {exercise.template.bandStrength} band</span>
+											{:else if exercise.bandStrength}
 												<span class="detail">@ {exercise.bandStrength} band</span>
 											{/if}
 										</div>
@@ -609,12 +757,12 @@
 			title="Confirm Cancellation"
 			message="Are you sure you want to cancel editing this routine? Any unsaved changes will be lost."
 			variant="warning"
-			confirmText="Cancel"
-			cancelText="Keep Editing"
-			on:confirm={() => {
+			confirmText="Keep Editing"
+			cancelText="Abandon Changes"
+			on:confirm={() => (showCancelModal = false)}
+			on:cancel={() => {
 				window.location.href = '/routines';
 			}}
-			on:cancel={() => (showCancelModal = false)}
 		/>
 	{/if}
 </main>
@@ -969,9 +1117,39 @@
 			align-items: stretch;
 			gap: 1rem;
 		}
+	}
 
-		.exercise-actions {
-			justify-content: center;
+	/* Success Banner Styles */
+	.success-banner {
+		background: linear-gradient(135deg, #10b981, #059669);
+		color: white;
+		padding: 1rem 1.5rem;
+		border-radius: 12px;
+		margin: 1rem 0;
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+		animation: slideInDown 0.3s ease-out;
+	}
+
+	.success-icon {
+		font-size: 1.25rem;
+	}
+
+	.success-text {
+		font-weight: 600;
+		font-size: 1rem;
+	}
+
+	@keyframes slideInDown {
+		from {
+			opacity: 0;
+			transform: translateY(-20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
 		}
 	}
 </style>

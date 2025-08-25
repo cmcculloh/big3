@@ -4,6 +4,7 @@
     import Card from '$lib/components/Card.svelte';
     import ConfirmModal from '$lib/components/ConfirmModal.svelte';
     import AlertModal from '$lib/components/AlertModal.svelte';
+    import WorkoutPrintView from '$lib/components/WorkoutPrintView.svelte';
     import { onMount } from 'svelte';
 
     let routines = [];
@@ -19,6 +20,13 @@
     let alertTitle = '';
     let alertMessage = '';
     let alertVariant = 'info';
+
+    // Print view state
+    let showPrintView = false;
+    let routineToPrint = null;
+
+    // Success message state for recently updated routines
+    let recentlyUpdatedRoutineId = null;
 
     // Mock data for now - will be replaced with actual API calls
     const mockRoutines = [
@@ -53,6 +61,13 @@
 
     onMount(async () => {
         try {
+            // Check if we're returning from an edit with success
+            const urlParams = new URLSearchParams(window.location.search);
+            const updatedRoutineId = urlParams.get('updated');
+                        if (updatedRoutineId) {
+                recentlyUpdatedRoutineId = parseInt(updatedRoutineId);
+            }
+
             // Fetch real routines from the database
             const response = await fetch('/api/routines');
 
@@ -97,6 +112,28 @@
 
     function closeAlert() {
         showAlertModal = false;
+    }
+
+    async function openPrintView(routine) {
+        try {
+            // Fetch the full routine data with exercises for printing
+            const response = await fetch(`/api/routines/${routine.id}`);
+            if (response.ok) {
+                const data = await response.json();
+                routineToPrint = data.routine;
+                showPrintView = true;
+            } else {
+                showAlert('Error', 'Failed to load routine details for printing', 'error');
+            }
+        } catch (error) {
+            console.error('Error loading routine for printing:', error);
+            showAlert('Error', 'Failed to load routine details for printing', 'error');
+        }
+    }
+
+    function closePrintView() {
+        showPrintView = false;
+        routineToPrint = null;
     }
 
     async function handleDeleteConfirm() {
@@ -191,6 +228,14 @@
                         </div>
                     </div>
 
+                    <!-- Success message for recently updated routine -->
+                    {#if recentlyUpdatedRoutineId === routine.id}
+                        <div class="success-message">
+                            <span class="success-icon">✅</span>
+                            <span class="success-text">Updated</span>
+                        </div>
+                    {/if}
+
                     <div class="routine-stats">
                         <div class="stat">
                             <span class="stat-label">Duration</span>
@@ -209,6 +254,9 @@
                     <div class="routine-actions">
                         <Button variant="success" size="small" on:click={() => startWorkout(routine.id)}>
                             ▶️ Start
+                        </Button>
+                        <Button variant="primary" size="small" on:click={() => openPrintView(routine)}>
+                            🖨️ Print
                         </Button>
                         <Button variant="secondary" size="small" on:click={() => editRoutine(routine.id)}>
                             ✏️ Edit
@@ -241,6 +289,16 @@
     variant={alertVariant}
     on:close={closeAlert}
 />
+
+{#if showPrintView && routineToPrint}
+    <div class="print-view-overlay">
+        <WorkoutPrintView
+            routine={routineToPrint}
+            showPrintButton={true}
+            on:back={closePrintView}
+        />
+    </div>
+{/if}
 
 <style>
     .routines {
@@ -513,6 +571,52 @@
 
         .routine-actions {
             flex-direction: column;
+        }
+    }
+
+    .print-view-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+        overflow-y: auto;
+        padding: 20px;
+    }
+
+    /* Success Message Styles */
+    .success-message {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        margin: 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        animation: slideInDown 0.3s ease-out;
+    }
+
+    .success-icon {
+        font-size: 1rem;
+    }
+
+    .success-text {
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    @keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
     }
 </style>
