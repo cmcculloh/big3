@@ -181,12 +181,12 @@
 	}
 
 	.timer-time.warning {
-		color: #fbbf24;
+		color: var(--warning);
 		animation: pulse 1s infinite;
 	}
 
 	.timer-time.danger {
-		color: #f87171;
+		color: var(--secondary);
 		animation: pulse 0.5s infinite;
 	}
 
@@ -210,8 +210,7 @@
 	}
 
 	.timer-btn:hover {
-		background-color: rgba(255, 255, 255, 0.3);
-		transform: translateY(-1px);
+		/* No hover effects */
 	}
 
 	.timer-btn:active {
@@ -219,11 +218,11 @@
 	}
 
 	.timer-btn-start {
-		background-color: rgba(16, 185, 129, 0.8);
+		background-color: rgba(20, 184, 129, 0.8);
 	}
 
 	.timer-btn-start:hover {
-		background-color: rgba(16, 185, 129, 1);
+		background-color: rgba(20, 184, 129, 1);
 	}
 
 	.timer-btn-pause {

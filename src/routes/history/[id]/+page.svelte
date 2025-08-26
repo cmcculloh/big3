@@ -31,11 +31,11 @@
 
     function getDifficultyColor(difficulty) {
         const colors = {
-            '😊': '#10b981',
-            '😐': '#f59e0b',
-            '☹️': '#ef4444'
+            '😊': 'var(--success)',
+            '😐': 'var(--warning)',
+            '☹️': 'var(--secondary)'
         };
-        return colors[difficulty] || '#6b7280';
+        return colors[difficulty] || 'var(--text-secondary)';
     }
 
     function goBack() {

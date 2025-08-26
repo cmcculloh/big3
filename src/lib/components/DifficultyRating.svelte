@@ -101,17 +101,14 @@
 	}
 
 	.difficulty-option:hover:not(.disabled) {
-		border-color: var(--accent);
-		transform: translateY(-2px);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		/* No hover effects */
 	}
 
 	.difficulty-option.selected {
 		border-color: var(--primary);
 		background-color: var(--primary);
 		color: white;
-		transform: translateY(-2px);
-		box-shadow: 0 4px 12px rgba(10, 36, 99, 0.3);
+		box-shadow: var(--shadow-md);
 	}
 
 	.difficulty-option.disabled {

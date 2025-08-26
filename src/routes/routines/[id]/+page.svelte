@@ -347,18 +347,18 @@
     }
 
     .exercise-category-warmup {
-        background: #e3f2fd;
-        color: #1976d2;
+        background: var(--orange-100);
+        color: var(--orange-700);
     }
 
     .exercise-category-main {
-        background: #e8f5e8;
-        color: #388e3c;
+        background: var(--green-100);
+        color: var(--green-700);
     }
 
     .exercise-category-cooldown {
-        background: #fff3e0;
-        color: #f57c00;
+        background: var(--blue-100);
+        color: var(--blue-700);
     }
 
     .exercise-details {

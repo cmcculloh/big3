@@ -189,9 +189,9 @@
     }
 
     .error-message {
-        background-color: #fef2f2;
-        border: 1px solid #fecaca;
-        color: #dc2626;
+        background-color: var(--background-primary);
+        border: 1px solid var(--warning);
+        color: var(--warning);
         padding: 0.75rem;
         border-radius: 0.5rem;
         margin-bottom: 1.5rem;

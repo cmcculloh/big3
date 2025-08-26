@@ -1,6 +1,7 @@
 <script>
     import { page } from '$app/stores';
     import Button from './Button.svelte';
+    import ExerciseIcon from './ExerciseIcon.svelte';
     import { goto } from '$app/navigation';
 
     // Get user data from page data
@@ -33,12 +34,16 @@
 
 <nav>
     <div class="nav-left">
-        <a href="/" class="nav-brand">🏋️ Big3</a>
+        <a href="/" class="nav-brand">
+            <ExerciseIcon category="strength" size={20} />
+            Big3
+        </a>
         <a href="/routines">Routines</a>
         <a href="/exercises">Exercises</a>
         <a href="/workouts">Workouts</a>
         <a href="/history">History</a>
         <a href="/ai">🤖 AI</a>
+        <a href="/icon-demo">🎨 Icons</a>
     </div>
 
     <div class="nav-right">
@@ -87,17 +92,23 @@
     .nav-brand {
         font-size: 1.5rem;
         font-weight: 700;
-        color: var(--primary);
+        color: white;
         text-decoration: none;
         padding: 0.5rem 1rem;
         border-radius: 0.75rem;
         background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-        color: white;
         border: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .nav-brand :global(svg) {
+        color: white;
     }
 
     nav a {
-        color: #1f2937;
+        color: var(--text-primary);
         text-decoration: none;
         font-weight: 600;
         padding: 0.75rem 1.5rem;
@@ -108,10 +119,8 @@
     }
 
     nav a:hover {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, var(--cerulean) 0%, var(--royal-blue-traditional) 100%);
         color: white;
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
     }
 
     nav a:active {

@@ -23,7 +23,6 @@
 	on:click={handleClick}
 	on:keydown={(e) => e.key === 'Enter' && clickable && handleClick(e)}
 	role={clickable ? 'button' : undefined}
-	tabindex={clickable ? 0 : undefined}
 >
 	<slot />
 </div>
@@ -39,15 +38,15 @@
 
 	/* Elevation variants */
 	.card-low {
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		box-shadow: var(--shadow-md);
 	}
 
 	.card-medium {
-		box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1);
+		box-shadow: var(--shadow-lg);
 	}
 
 	.card-high {
-		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 8px 20px rgba(0, 0, 0, 0.15);
+		box-shadow: var(--shadow-xl);
 	}
 
 	/* Padding variants */
@@ -69,22 +68,21 @@
 	}
 
 	.card-clickable:hover {
-		transform: translateY(-4px);
-		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 8px 20px rgba(0, 0, 0, 0.15);
+		/* No hover effects */
 	}
 
 	.card-clickable:focus {
-		outline: 2px solid #667eea;
+		outline: 2px solid var(--primary);
 		outline-offset: 2px;
 	}
 
 	/* Selected state */
 	.card-selected {
-		border-color: #667eea;
-		background: rgba(102, 126, 234, 0.05);
+		border-color: var(--primary);
+		background: rgba(10, 36, 99, 0.05);
 	}
 
 	.card-selected.card-clickable:hover {
-		background: rgba(102, 126, 234, 0.1);
+		background: rgba(10, 36, 99, 0.1);
 	}
 </style>

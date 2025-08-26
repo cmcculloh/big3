@@ -437,9 +437,9 @@
 
     .workout-notes {
         padding: 1rem;
-        background-color: #f8fafc;
+        background-color: var(--cyan-50);
         border-radius: 0.5rem;
-        border-left: 4px solid var(--accent);
+        border-left: 4px solid var(--cyan-500);
     }
 
     .workout-notes p {

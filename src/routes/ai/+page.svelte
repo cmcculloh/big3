@@ -340,9 +340,9 @@
     .feature-example {
         margin-top: 1rem;
         padding: 1rem;
-        background-color: #f8fafc;
+        background-color: var(--blue-50);
         border-radius: 0.5rem;
-        border-left: 4px solid var(--accent);
+        border-left: 4px solid var(--blue-500);
         font-size: 0.875rem;
         text-align: left;
     }
@@ -367,9 +367,9 @@
 
     .tip {
         padding: 1.5rem;
-        background-color: #f8fafc;
+        background-color: var(--teal-50);
         border-radius: 0.5rem;
-        border-left: 4px solid var(--accent);
+        border-left: 4px solid var(--teal-500);
     }
 
     .tip h4 {

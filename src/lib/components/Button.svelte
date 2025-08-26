@@ -54,31 +54,16 @@
 		border-radius: 0.75rem;
 		font-weight: 600;
 		cursor: pointer;
-		transition: all 0.3s ease;
 		text-decoration: none;
 		font-family: inherit;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 		position: relative;
-		overflow: hidden;
 	}
 
-	.btn::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: -100%;
-		width: 100%;
-		height: 100%;
-		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-		transition: left 0.5s ease;
-	}
-
-	.btn:hover::before {
-		left: 100%;
-	}
+	/* Removed shimmery animation */
 
 	.btn:focus {
-		outline: 2px solid #667eea;
+		outline: 2px solid var(--primary);
 		outline-offset: 2px;
 	}
 
@@ -89,61 +74,51 @@
 
 	/* Variants */
 	.btn-primary {
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		background: linear-gradient(135deg, var(--cerulean) 0%, var(--royal-blue-traditional) 100%);
 		color: white;
 	}
 
 	.btn-primary:hover:not(:disabled) {
-		background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-		transform: translateY(-2px);
-		box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+		background: linear-gradient(135deg, var(--hover-primary) 0%, var(--blue-600) 100%);
 	}
 
 	.btn-secondary {
-		background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+		background: linear-gradient(135deg, var(--davys-gray) 0%, var(--royal-blue-traditional) 100%);
 		color: white;
 	}
 
 	.btn-secondary:hover:not(:disabled) {
-		background: linear-gradient(135deg, #5a5a5a 0%, #3f3f3f 100%);
-		transform: translateY(-2px);
-		box-shadow: 0 8px 20px rgba(107, 114, 128, 0.3);
+		background: linear-gradient(135deg, var(--hover-secondary) 0%, var(--gray-700) 100%);
 	}
 
 	.btn-success {
-		background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+		background: linear-gradient(135deg, var(--success) 0%, var(--cerulean) 100%);
 		color: white;
 	}
 
 	.btn-success:hover:not(:disabled) {
-		background: linear-gradient(135deg, #059669 0%, #047857 100%);
-		transform: translateY(-2px);
-		box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+		background: linear-gradient(135deg, var(--success-light) 0%, var(--success-dark) 100%);
 	}
 
 	.btn-danger {
-		background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+		background: linear-gradient(135deg, var(--secondary) 0%, var(--imperial-red) 100%);
 		color: white;
 	}
 
 	.btn-danger:hover:not(:disabled) {
-		background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-		transform: translateY(-2px);
-		box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+		background: linear-gradient(135deg, var(--danger-light) 0%, var(--danger-dark) 100%);
 	}
 
 	.btn-ghost {
 		background: transparent;
-		color: #667eea;
-		border: 2px solid #667eea;
+		color: var(--primary);
+		border: 2px solid var(--primary);
 		box-shadow: none;
 	}
 
 	.btn-ghost:hover:not(:disabled) {
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		background: linear-gradient(135deg, var(--hover-accent) 0%, var(--teal-600) 100%);
 		color: white;
-		transform: translateY(-2px);
-		box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
 	}
 
 	/* Sizes */
@@ -174,6 +149,6 @@
 	}
 
 	.btn-disabled:hover {
-		transform: none !important;
+		/* No hover effects for disabled buttons */
 	}
 </style>

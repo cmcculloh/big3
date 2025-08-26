@@ -306,7 +306,7 @@
         margin: 0 auto;
         padding: 2rem;
         min-height: 100vh;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, var(--cerulean) 0%, var(--royal-blue-traditional) 100%);
     }
 
     .routines-header {
@@ -327,7 +327,7 @@
         font-size: 3rem;
         font-weight: 800;
         margin: 0 0 0.5rem 0;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, var(--cerulean) 0%, var(--royal-blue-traditional) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -335,7 +335,7 @@
 
     .routines-title p {
         font-size: 1.25rem;
-        color: #6b7280;
+        color: var(--text-secondary);
         margin: 0;
         font-weight: 500;
     }
@@ -356,8 +356,8 @@
     .loading-spinner {
         width: 60px;
         height: 60px;
-        border: 4px solid #e2e8f0;
-        border-top: 4px solid #667eea;
+        border: 4px solid var(--subtle);
+        border-top: 4px solid var(--cerulean);
         border-radius: 50%;
         animation: spin 1s linear infinite;
         margin-bottom: 2rem;
@@ -366,7 +366,7 @@
 
     .loading p {
         font-size: 1.125rem;
-        color: #6b7280;
+        color: var(--text-secondary);
         font-weight: 500;
     }
 
@@ -391,7 +391,7 @@
     .empty-icon {
         font-size: 5rem;
         margin-bottom: 2rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, var(--cerulean) 0%, var(--royal-blue-traditional) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -402,11 +402,11 @@
         font-size: 2rem;
         font-weight: 700;
         margin: 0 0 1rem 0;
-        color: #1f2937;
+        color: var(--text-primary);
     }
 
     .empty-state p {
-        color: #6b7280;
+        color: var(--text-secondary);
         margin: 0 0 2rem 0;
         font-size: 1.125rem;
         font-weight: 500;
@@ -440,12 +440,11 @@
         left: 0;
         right: 0;
         height: 4px;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(90deg, var(--cerulean) 0%, var(--royal-blue-traditional) 100%);
     }
 
     .routine-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+        /* No hover effects */
     }
 
     .routine-header {
@@ -457,7 +456,7 @@
     .routine-icon {
         font-size: 3rem;
         flex-shrink: 0;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, var(--cerulean) 0%, var(--royal-blue-traditional) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -468,12 +467,12 @@
         font-size: 1.5rem;
         font-weight: 700;
         margin: 0 0 0.75rem 0;
-        color: #1f2937;
+        color: var(--text-primary);
         line-height: 1.2;
     }
 
     .routine-description {
-        color: #6b7280;
+        color: var(--text-secondary);
         margin: 0;
         line-height: 1.6;
         font-size: 1rem;
@@ -485,10 +484,10 @@
         grid-template-columns: repeat(3, 1fr);
         gap: 1.5rem;
         padding: 1.5rem;
-        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
         border-radius: 1rem;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--gray-200);
+        box-shadow: var(--shadow-sm);
     }
 
     .stat {
@@ -503,14 +502,13 @@
     }
 
     .stat:hover {
-        background: rgba(255, 255, 255, 0.9);
-        transform: scale(1.05);
+        /* No hover effects */
     }
 
     .stat-label {
         font-size: 0.75rem;
         font-weight: 600;
-        color: #64748b;
+        color: var(--text-secondary);
         text-transform: uppercase;
         letter-spacing: 0.1em;
         margin-bottom: 0.5rem;
@@ -519,8 +517,8 @@
     .stat-value {
         font-size: 1.25rem;
         font-weight: 700;
-        color: #1e293b;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: var(--text-primary);
+        background: linear-gradient(135deg, var(--cerulean) 0%, var(--royal-blue-traditional) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -588,7 +586,7 @@
 
     /* Success Message Styles */
     .success-message {
-        background: linear-gradient(135deg, #10b981, #059669);
+        background: linear-gradient(135deg, var(--success), var(--cerulean));
         color: white;
         padding: 0.75rem 1rem;
         border-radius: 8px;
@@ -596,7 +594,7 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        box-shadow: 0 4px 12px rgba(36, 123, 160, 0.3);
         animation: slideInDown 0.3s ease-out;
     }
 

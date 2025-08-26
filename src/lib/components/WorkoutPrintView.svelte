@@ -78,20 +78,20 @@
                             .workout-header {
                                 background: white;
                                 padding: 20px;
-                                border-bottom: 2px solid #000;
+                                border-bottom: 2px solid var(--text-primary);
                                 margin-bottom: 20px;
                             }
                             .routine-name { font-size: 28px; font-weight: 700; margin-bottom: 15px; text-align: center; }
                             .routine-meta { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
                             .meta-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-                            .meta-label { font-size: 12px; color: #000; text-transform: uppercase; font-weight: 600; }
-                            .meta-value { font-size: 16px; color: #000; font-weight: 500; }
-                            .exercises-table { border: 1px solid #000; width: 100%; }
+                            .meta-label { font-size: 12px; color: var(--text-primary); text-transform: uppercase; font-weight: 600; }
+                            .meta-value { font-size: 16px; color: var(--text-primary); font-weight: 500; }
+                            .exercises-table { border: 1px solid var(--text-primary); width: 100%; }
                             .table-header {
                                 display: grid;
                                 grid-template-columns: 2fr 1fr 0.8fr 0.8fr 2fr;
-                                background: #f0f0f0;
-                                color: #000;
+                                background: var(--background-primary);
+                                color: var(--text-primary);
                                 font-weight: 600;
                                 padding: 15px;
                                 gap: 15px;
@@ -106,14 +106,14 @@
                                 border-bottom: 1px solid #ccc;
                                 background: white;
                             }
-                            .exercise-row:nth-child(even) { background: #f8f9fa; }
-                            .exercise-row.alternating { background: #e3f2fd; }
-                            .exercise-row.first-in-group { border-top: 2px solid #2196f3; }
-                            .exercise-row.last-in-group { border-bottom: 2px solid #2196f3; }
-                            .alternating-label { font-size: 11px; color: #1976d2; font-weight: 600; text-transform: uppercase; margin-bottom: 5px; }
-                            .exercise-name { font-weight: 600; color: #000; }
-                            .exercise-notes { font-size: 12px; color: #000; font-weight: normal; margin-top: 5px; font-style: italic; }
-                            .exercise-weight, .exercise-sets, .exercise-reps { text-align: center; font-weight: 500; color: #000; }
+                            .exercise-row:nth-child(even) { background: var(--background-primary); }
+                            .exercise-row.alternating { background: var(--background-primary); }
+                            .exercise-row.first-in-group { border-top: 2px solid var(--accent); }
+                            .exercise-row.last-in-group { border-bottom: 2px solid var(--accent); }
+                            .alternating-label { font-size: 11px; color: var(--accent); font-weight: 600; text-transform: uppercase; margin-bottom: 5px; }
+                            .exercise-name { font-weight: 600; color: var(--text-primary); }
+                            .exercise-notes { font-size: 12px; color: var(--text-primary); font-weight: normal; margin-top: 5px; font-style: italic; }
+                            .exercise-weight, .exercise-sets, .exercise-reps { text-align: center; font-weight: 500; color: var(--text-primary); }
                             .exercise-checkboxes { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
                             .checkbox-container { display: inline-block; position: relative; cursor: pointer; }
                             .set-checkbox { position: absolute; opacity: 0; height: 0; width: 0; }
@@ -121,27 +121,27 @@
                                 height: 20px;
                                 width: 20px;
                                 background-color: white;
-                                border: 2px solid #000;
+                                border: 2px solid var(--text-primary);
                                 border-radius: 4px;
                                 display: flex;
                                 align-items: center;
                                 justify-content: center;
                             }
-                            .set-checkbox:checked ~ .checkmark { background-color: #28a745; border-color: #28a745; }
+                            .set-checkbox:checked ~ .checkmark { background-color: var(--success); border-color: var(--success); }
                             .set-checkbox:checked ~ .checkmark::after { content: '✓'; color: white; font-size: 14px; font-weight: bold; }
                             .workout-footer {
                                 background: white;
                                 padding: 20px;
-                                border-top: 2px solid #000;
+                                border-top: 2px solid var(--text-primary);
                                 margin-top: 20px;
                             }
                             .footer-notes, .workout-summary { margin-bottom: 20px; }
                             .footer-notes ul { margin: 10px 0; padding-left: 20px; }
-                            .footer-notes li { margin-bottom: 5px; color: #000; }
-                            .workout-summary p { margin: 5px 0; color: #000; }
+                            .footer-notes li { margin-bottom: 5px; color: var(--text-primary); }
+                            .workout-summary p { margin: 5px 0; color: var(--text-primary); }
                             .no-print { text-align: center; margin: 20px; }
-                            .print-btn { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; margin: 10px; }
-                            .back-btn { padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; margin: 10px; }
+                            .print-btn { padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; margin: 10px; }
+                            .back-btn { padding: 10px 20px; background: var(--tertiary); color: white; border: none; border-radius: 6px; cursor: pointer; margin: 10px; }
                         </style>
                     </head>
                     <body>

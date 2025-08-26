@@ -186,9 +186,9 @@
     }
 
     .success-message {
-        background-color: #f0fdf4;
-        border: 1px solid #bbf7d0;
-        color: #166534;
+        background-color: var(--background-primary);
+        border: 1px solid var(--success);
+        color: var(--success);
         padding: 1.5rem;
         border-radius: 0.5rem;
         margin-bottom: 1.5rem;
@@ -202,7 +202,7 @@
 
     .success-message p {
         margin: 0 0 1rem 0;
-        color: #166534;
+        color: var(--success);
     }
 
     .login-info {
@@ -219,9 +219,9 @@
     }
 
     .error-message {
-        background-color: #fef2f2;
-        border: 1px solid #fecaca;
-        color: #dc2626;
+        background-color: var(--background-primary);
+        border: 1px solid var(--warning);
+        color: var(--warning);
         padding: 1.5rem;
         border-radius: 0.5rem;
         margin-bottom: 1.5rem;
@@ -235,7 +235,7 @@
 
     .error-message p {
         margin: 0;
-        color: #dc2626;
+        color: var(--warning);
     }
 
     .setup-footer {

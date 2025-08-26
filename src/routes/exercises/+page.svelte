@@ -468,9 +468,9 @@
 
     .exercise-instructions {
         padding: 1rem;
-        background-color: #f8fafc;
+        background-color: var(--blue-50);
         border-radius: 0.5rem;
-        border-left: 4px solid var(--accent);
+        border-left: 4px solid var(--blue-500);
     }
 
     .exercise-instructions h4 {
@@ -491,9 +491,9 @@
 
     .exercise-safety, .exercise-targets {
         padding: 1rem;
-        background-color: #f8fafc;
+        background-color: var(--teal-50);
         border-radius: 0.5rem;
-        border-left: 4px solid var(--accent);
+        border-left: 4px solid var(--teal-500);
         margin-top: 1rem;
     }
 

@@ -137,7 +137,7 @@
     .hero {
         text-align: center;
         padding: 4rem 2rem;
-        background: linear-gradient(135deg, var(--primary), var(--accent));
+        background: linear-gradient(135deg, var(--primary), var(--teal-600));
         color: white;
         border-radius: 1rem;
         margin-bottom: 4rem;

@@ -687,7 +687,7 @@ Would you like me to save this as a new routine?`, workout);
         flex-direction: column;
         gap: 1rem;
         padding: 1rem;
-        background-color: #f8fafc;
+        background-color: var(--gray-50);
         border-radius: 0.5rem;
         max-height: 400px;
     }
@@ -806,19 +806,16 @@ Would you like me to save this as a new routine?`, workout);
     }
 
     .auto-complete-suggestion:hover {
-        background-color: var(--primary);
-        color: white;
-        border-color: var(--primary);
-        transform: translateY(-1px);
+        /* No hover effects */
     }
 
     /* Prompt Progress Styles */
     .prompt-progress {
         margin: 0 1rem;
         padding: 1rem;
-        background-color: #f8fafc;
+        background-color: var(--blue-50);
         border-radius: 0.5rem;
-        border: 1px solid var(--subtle);
+        border: 1px solid var(--blue-200);
     }
 
     .progress-bar {
@@ -903,9 +900,9 @@ Would you like me to save this as a new routine?`, workout);
     .workout-preview {
         margin-top: 1rem;
         padding: 1rem;
-        background-color: #f0f9ff;
+        background-color: var(--green-50);
         border-radius: 0.5rem;
-        border-left: 4px solid var(--accent);
+        border-left: 4px solid var(--green-500);
     }
 
     .workout-preview h4 {
@@ -922,9 +919,9 @@ Would you like me to save this as a new routine?`, workout);
     .quick-workout-form {
         margin-top: 1rem;
         padding: 1rem;
-        background-color: #f8fafc;
+        background-color: var(--amber-50);
         border-radius: 0.5rem;
-        border: 1px solid var(--subtle);
+        border: 1px solid var(--amber-200);
     }
 
     .quick-workout-form h4 {

@@ -1121,7 +1121,7 @@
 
 	/* Success Banner Styles */
 	.success-banner {
-		background: linear-gradient(135deg, #10b981, #059669);
+		background: linear-gradient(135deg, var(--success), var(--cerulean));
 		color: white;
 		padding: 1rem 1.5rem;
 		border-radius: 12px;
@@ -1129,7 +1129,7 @@
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
-		box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+		box-shadow: 0 4px 12px rgba(36, 123, 160, 0.3);
 		animation: slideInDown 0.3s ease-out;
 	}
 
